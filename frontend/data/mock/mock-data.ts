@@ -102,3 +102,23 @@ export const mockStudentCourses = mockCourses.map(c => ({
   ...c,
   progress: Math.floor(Math.random() * 40) + 60,
 }));
+// Tambahkan di bawah mockStudentCourses
+export type Material = {
+  id: string;
+  weekId: string;
+  title: string;
+  type: 'pdf' | 'ppt' | 'video' | 'yt_link';
+  contentUrl: string;
+};
+
+export const mockWeeks: Week[] = [
+  { id: 'w1', weekNumber: 1, title: 'Introduction to Fullstack', materials: 2, assignments: 1 },
+  { id: 'w2', weekNumber: 2, title: 'React Fundamentals', materials: 3, assignments: 1 },
+  { id: 'w3', weekNumber: 3, title: 'Laravel API & Authentication', materials: 1, assignments: 2 },
+];
+
+export const mockMaterials: Material[] = [
+  { id: 'm1', weekId: 'w1', title: 'Slide Minggu 1 - Next.js Overview.pdf', type: 'pdf', contentUrl: '#' },
+  { id: 'm2', weekId: 'w1', title: 'Video: Setup Project (YouTube)', type: 'yt_link', contentUrl: 'https://youtube.com/...' },
+  { id: 'm3', weekId: 'w2', title: 'Component Design System.pptx', type: 'ppt', contentUrl: '#' },
+];

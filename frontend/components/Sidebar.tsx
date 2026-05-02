@@ -8,7 +8,8 @@ import {
   Users, 
   ClipboardList, 
   LogOut,
-  GraduationCap 
+  GraduationCap, 
+  FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ export function Sidebar({ userName, userRole, avatar }: SidebarProps) {
         { href: '/professor/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/professor/courses', label: 'Courses', icon: BookOpen },
         { href: '/professor/students', label: 'Students', icon: Users },
+        { href: '/professor/materials', label: 'Materials', icon: FileText },
       ]
     : [
         { href: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
