@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -12,6 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 
+// Import logic demo statis (terpisah)
+import { demoAccounts } from '@/lib/demo-accounts';
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,28 +26,52 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
+    // ==================== LOGIN STATIS (menggunakan data dari lib/demo-accounts.ts) ====================
+    const { professor, student } = demoAccounts;
+
+    if (email === professor.email && password === professor.password) {
+      localStorage.setItem('token', 'static-demo-token-professor');
+      router.push(professor.redirectTo);   // ← /professor/dashboard
+      setLoading(false);
+      return;
+    }
+
+    if (email === student.email && password === student.password) {
+      localStorage.setItem('token', 'static-demo-token-student');
+      router.push(student.redirectTo);     // ← /student/dashboard
+      setLoading(false);
+      return;
+    }
+
+    // Jika salah
+    setError('Email atau password salah. Gunakan akun demo di bawah.');
+    setLoading(false);
+    // ============================================================================================
+
+    // ==================== KODE DINAMIS LARAVEL (jangan dihapus) ====================
+    /*
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/login`,
         { email, password },
-        { withCredentials: true } // penting untuk Sanctum cookie
+        { withCredentials: true }
       );
 
-      // Simpan token (Laravel Sanctum)
       localStorage.setItem('token', response.data.token);
       
-      // Redirect berdasarkan role
       const role = response.data.user.role;
       if (role === 'professor') {
-        router.push('/dashboard/professor');
+        router.push('/professor/dashboard');
       } else {
-        router.push('/dashboard/student');
+        router.push('/student/dashboard');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login gagal. Cek email/password!');
     } finally {
       setLoading(false);
     }
+    */
+    // =========================================================================
   };
 
   return (
@@ -111,12 +137,17 @@ export default function LoginPage() {
             </Button>
           </form>
 
+          {/* Info Demo Accounts */}
+          <div className="mt-6 p-4 bg-gray-50 rounded-xl text-xs border border-gray-200">
+            <p className="font-medium text-gray-700 mb-2">🔑 Akun Demo (untuk testing):</p>
+            <p><strong>Professor:</strong> {demoAccounts.professor.email}</p>
+            <p><strong>Student:</strong> {demoAccounts.student.email}</p>
+            <p className="text-gray-500 mt-1">Password: <span className="font-mono">password</span></p>
+          </div>
+
           <div className="mt-6 text-center text-sm">
             <span className="text-gray-600">Belum punya akun? </span>
-            <Link
-              href="/register"
-              className="font-medium text-[#0D542B] hover:underline"
-            >
+            <Link href="/register" className="font-medium text-[#0D542B] hover:underline">
               Daftar sekarang
             </Link>
           </div>
