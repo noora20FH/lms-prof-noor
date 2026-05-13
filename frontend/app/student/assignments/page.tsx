@@ -1,16 +1,23 @@
-"use client";
+'use client';
 
-import { mockAssignments } from "@/data/mock/mock-data";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { mockAssignments } from '@/data/mock/mock-data';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 export default function StudentAssignments() {
+  const router = useRouter();
+
   const pending = mockAssignments.filter(a => a.status === "pending");
   const submitted = mockAssignments.filter(a => a.status === "submitted" || a.status === "graded");
 
+  const handleSubmitNow = (courseId: number, week: number) => {
+    router.push(`/student/courses/details/week?courseId=${courseId}&week=${week}`);
+  };
+
   return (
     <div className="space-y-8">
-      {/* Header Gradient (persis dari Figma) */}
+      {/* Header Gradient */}
       <div 
         className="rounded-3xl p-8 text-white"
         style={{
@@ -49,6 +56,7 @@ export default function StudentAssignments() {
                     Due: <span className="font-medium">{assignment.dueDate}</span>
                   </p>
                   <Button 
+                    onClick={() => handleSubmitNow(assignment.courseId, assignment.week)}
                     className="bg-[#0D542B] hover:bg-[#0D542B]/90 px-8"
                   >
                     Submit Now

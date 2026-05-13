@@ -2,7 +2,8 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { mockStudentCourses } from '@/data/mock/mock-data';
+import { mockStudentCourses, mockCourseMaterials } from '@/data/mock/mock-data';
+import { ExternalLink } from 'lucide-react';
 
 export default function StudentCourseWeekDetailPage() {
   const router = useRouter();
@@ -13,11 +14,10 @@ export default function StudentCourseWeekDetailPage() {
   const course = mockStudentCourses.find((c) => c.id === courseId);
   if (!course) return <p className="text-red-500">Kursus tidak ditemukan</p>;
 
-  const materials = [
-    { id: 1, title: 'Slide Perkuliahan', type: 'ppt' as const },
-    { id: 2, title: 'Modul Praktikum', type: 'pdf' as const },
-    { id: 3, title: 'Video Tutorial', type: 'video_link' as const },
-  ];
+  // Ambil materi berdasarkan courseId dan week
+  const materials = mockCourseMaterials.filter(
+    (m) => m.courseId === courseId && m.week === weekNumber
+  );
 
   const assignment = {
     id: 1,
@@ -30,6 +30,7 @@ export default function StudentCourseWeekDetailPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header Gradient */}
       <div
         className="rounded-lg p-6 mb-6"
         style={{ background: 'linear-gradient(135deg, #0F172B 0%, #0D542B 50%, #004F3B 100%)' }}
@@ -48,29 +49,43 @@ export default function StudentCourseWeekDetailPage() {
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Materials</h3>
         <div className="space-y-3">
-          {materials.map((material) => (
-            <div
-              key={material.id}
-              className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">
-                  {material.type === 'pdf' && '📄'}
-                  {material.type === 'ppt' && '📊'}
-                  {material.type === 'video_link' && '🎥'}
-                </span>
-                <div>
-                  <p className="text-gray-900">{material.title}</p>
-                  <p className="text-gray-500 text-sm capitalize">
-                    {material.type.replace('_', ' ')}
-                  </p>
+          {materials.length > 0 ? (
+            materials.map((material) => (
+              <div
+                key={material.id}
+                className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">
+                    {material.type === 'pdf' && '📄'}
+                    {material.type === 'ppt' && '📊'}
+                    {material.type === 'video_link' && '🎥'}
+                  </span>
+                  <div>
+                    <p className="text-gray-900">{material.title}</p>
+                    <p className="text-gray-500 text-sm capitalize">
+                      {material.type.replace('_', ' ')}
+                    </p>
+                  </div>
                 </div>
+
+                {/* Tombol Buka (Link) */}
+                <a
+                  href={material.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="no-underline"
+                >
+                  <Button className="bg-gradient-to-r from-[#0D542B] to-[#004F3B] flex items-center gap-2">
+                    Buka
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                </a>
               </div>
-              <Button className="bg-gradient-to-r from-[#0D542B] to-[#004F3B]">
-                Download
-              </Button>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-gray-500 italic">Belum ada materi untuk week ini.</p>
+          )}
         </div>
       </div>
 

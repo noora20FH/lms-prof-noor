@@ -50,6 +50,8 @@ export type Assignment = {
   id: string;
   title: string;
   course: string;
+  courseId: number; // ← tambahkan ini
+  week: number;     // ← tambahkan ini
   dueDate: string;
   daysLeft: number;
   status: "pending" | "submitted" | "graded";
@@ -58,18 +60,41 @@ export type Assignment = {
 };
 
 export const mockAssignments: Assignment[] = [
+  {id: "1",
+    title: "Tugas 1 - CRUD API",
+    course: "Algoritma dan Pemrograman",
+    courseId: 1,           // ← tambahkan ini
+    week: 1,               // ← tambahkan ini
+    dueDate: "2026-05-10",
+    status: "pending" as const,
+    daysLeft: 5,
+  },
   {
-    id: "1",
+    id: "2",
+    title: "Tugas 3 - Responsive UI",
+    course: "Pemrograman Web",
+    courseId: 3,
+    week: 3,
+    dueDate: "2026-05-15",
+    status: "pending" as const,
+    daysLeft: 10,
+  },
+  {
+    id: "3",
     title: "Tugas 1 - CRUD API dengan Laravel",
     course: "Pemrograman Web Lanjutan",
+    courseId: 1,
+    week: 1,
     dueDate: "2026-05-10",
     daysLeft: 3,
     status: "pending",
   },
   {
-    id: "2",
+    id: "4",
     title: "Tugas 2 - Database Design & ERD",
     course: "Basis Data dan SQL",
+    courseId: 2,
+    week: 2,
     dueDate: "2026-05-05",
     daysLeft: 8,
     status: "submitted",
@@ -77,17 +102,21 @@ export const mockAssignments: Assignment[] = [
     score: 92,
   },
   {
-    id: "3",
+    id: "5",
     title: "Tugas 3 - Responsive UI Figma to Tailwind",
     course: "UI/UX Design",
+    courseId: 3,
+    week: 3,
     dueDate: "2026-05-15",
     daysLeft: 12,
     status: "pending",
   },
   {
-    id: "4",
+    id: "6",
     title: "Quiz Minggu 4 - Authentication",
     course: "Pemrograman Web Lanjutan",
+    courseId: 1,
+    week: 4,
     dueDate: "2026-04-20",
     daysLeft: -5,
     status: "submitted",
@@ -190,4 +219,65 @@ export const mockRecentSubmissions = [
     submittedAt: "1 hari yang lalu",
     fileName: "bubble_sort.py",
   },
+];
+
+export interface CourseMaterial {
+  id: number;
+  courseId: number;
+  week: number;
+  title: string;
+  type: 'ppt' | 'pdf' | 'video_link';
+  url: string;           // link yang akan dibuka
+}
+
+export const mockCourseMaterials: CourseMaterial[] = [
+  {
+    id: 1,
+    courseId: 1,
+    week: 1,
+    title: 'Slide Perkuliahan',
+    type: 'ppt',
+    url: 'https://example.com/slides-week1.pptx',
+  },
+  {
+    id: 2,
+    courseId: 1,
+    week: 1,
+    title: 'Modul Praktikum',
+    type: 'pdf',
+    url: 'https://example.com/modul-praktikum-week1.pdf',
+  },
+  {
+    id: 3,
+    courseId: 1,
+    week: 1,
+    title: 'Video Tutorial',
+    type: 'video_link',
+    url: 'https://youtu.be/example-week1',
+  },
+  {
+    id: 4,
+    courseId: 1,
+    week: 2,
+    title: 'Slide Perkuliahan Week 2',
+    type: 'ppt',
+    url: 'https://example.com/slides-week2.pptx',
+  },
+  {
+    id: 5,
+    courseId: 2,
+    week: 1,
+    title: 'Modul Basis Data',
+    type: 'pdf',
+    url: 'https://example.com/basisdata-modul.pdf',
+  },
+  {
+    id: 6,
+    courseId: 2,
+    week: 1,
+    title: 'Video Tutorial Basis Data',
+    type: 'video_link',
+    url: 'https://example.com/basisdata-video.mp4',
+  },
+  // Tambahkan materi lain sesuai kebutuhan
 ];
