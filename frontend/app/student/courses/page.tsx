@@ -1,12 +1,15 @@
 'use client';
 
-import { mockStudentCourses } from '@/data/mock/mock-data';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
+import { mockStudentCourses } from '@/data/mock/mock-data';
 
-export default function StudentCourses() {
+export default function StudentCoursesPage() {
+  const router = useRouter();
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -36,13 +39,16 @@ export default function StudentCourses() {
                   </div>
                   <Progress value={course.progress} className="h-2" />
                 </div>
-                
+
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <span>{course.enrolled} / {course.totalStudents} mahasiswa</span>
                   <span className="text-emerald-600 font-medium">Ongoing</span>
                 </div>
-                
-                <Button className="w-full bg-[#0D542B] hover:bg-[#0A3F21]">
+
+                <Button
+                  onClick={() => router.push(`/student/courses/details?courseId=${course.id}`)}
+                  className="w-full bg-[#0D542B] hover:bg-[#0A3F21]"
+                >
                   Lanjut Belajar →
                 </Button>
               </div>

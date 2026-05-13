@@ -98,10 +98,39 @@ export const mockAssignments: Assignment[] = [
 
 export const mockProfessorCourses = mockCourses;
 
-export const mockStudentCourses = mockCourses.map(c => ({
-  ...c,
-  progress: Math.floor(Math.random() * 40) + 60,
-}));
+// export const mockStudentCourses = mockCourses.map(c => ({
+//   ...c,
+//   progress: Math.floor(Math.random() * 40) + 60,
+// }));
+
+// app/data/mock/mock-data.tsx
+export const mockStudentCourses = [
+  {
+    id: 1,
+    title: 'Algoritma dan Pemrograman',
+    description: 'Pemahaman dasar algoritma dan struktur data dengan bahasa pemrograman modern.',
+    progress: 75,
+    enrolled: 42,
+    totalStudents: 50,
+  },
+  {
+    id: 2,
+    title: 'Basis Data',
+    description: 'Desain, implementasi, dan pengelolaan database relasional.',
+    progress: 60,
+    enrolled: 38,
+    totalStudents: 45,
+  },
+  {
+    id: 3,
+    title: 'Pemrograman Web',
+    description: 'Membangun aplikasi web modern dengan Next.js dan Laravel.',
+    progress: 45,
+    enrolled: 35,
+    totalStudents: 40,
+  },
+];
+
 // Tambahkan di bawah mockStudentCourses
 export type Material = {
   id: string;
@@ -121,4 +150,44 @@ export const mockMaterials: Material[] = [
   { id: 'm1', weekId: 'w1', title: 'Slide Minggu 1 - Next.js Overview.pdf', type: 'pdf', contentUrl: '#' },
   { id: 'm2', weekId: 'w1', title: 'Video: Setup Project (YouTube)', type: 'yt_link', contentUrl: 'https://youtube.com/...' },
   { id: 'm3', weekId: 'w2', title: 'Component Design System.pptx', type: 'ppt', contentUrl: '#' },
+];
+
+// src/data/mock/mock-data.ts
+export const mockRecentSubmissions = [
+  {
+    id: 1,
+    studentName: "Budi Santoso",
+    nim: "2021010001",
+    course: "Algoritma dan Pemrograman",
+    assignmentTitle: "Tugas 5 - Sorting Algorithm",
+    submittedAt: "2 jam yang lalu",
+    fileName: "sorting_solution.pdf",
+  },
+  {
+    id: 2,
+    studentName: "Siti Nurhaliza",
+    nim: "2021010002",
+    course: "Basis Data",
+    assignmentTitle: "Project ERD Design",
+    submittedAt: "3 jam yang lalu",
+    fileName: "erd_final.pdf",
+  },
+  {
+    id: 3,
+    studentName: "Ahmad Zaki",
+    nim: "2021010003",
+    course: "Pemrograman Web",
+    assignmentTitle: "Tugas 4 - React Components",
+    submittedAt: "1 hari yang lalu",
+    fileName: "frontend_app.zip",
+  },
+  {
+    id: 4,
+    studentName: "Dewi Lestari",
+    nim: "2021010004",
+    course: "Algoritma dan Pemrograman",
+    assignmentTitle: "Tugas 5 - Sorting Algorithm",
+    submittedAt: "1 hari yang lalu",
+    fileName: "bubble_sort.py",
+  },
 ];
