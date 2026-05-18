@@ -7,7 +7,8 @@ export type Course = {
   professor: string;
   enrolled: number;
   totalStudents: number;
-  progress?: number; // untuk student
+  totalWeeks?: number;
+  progress?: number;
 };
 
 export type Week = {
@@ -27,6 +28,7 @@ export const mockCourses: Course[] = [
     professor: "Prof. Noor",
     enrolled: 34,
     totalStudents: 45,
+    totalWeeks: 17,
   },
   {
     id: "2",
@@ -35,6 +37,7 @@ export const mockCourses: Course[] = [
     professor: "Prof. Noor",
     enrolled: 28,
     totalStudents: 40,
+    totalWeeks: 17,
   },
   {
     id: "3",
@@ -43,6 +46,7 @@ export const mockCourses: Course[] = [
     professor: "Prof. Noor",
     enrolled: 41,
     totalStudents: 50,
+    totalWeeks: 17,
   },
 ];
 
@@ -163,7 +167,8 @@ export const mockStudentCourses = [
 // Tambahkan di bawah mockStudentCourses
 export type Material = {
   id: string;
-  weekId: string;
+  courseId: number;
+  weekNumber: number;
   title: string;
   type: 'pdf' | 'ppt' | 'video' | 'yt_link';
   contentUrl: string;
@@ -176,9 +181,30 @@ export const mockWeeks: Week[] = [
 ];
 
 export const mockMaterials: Material[] = [
-  { id: 'm1', weekId: 'w1', title: 'Slide Minggu 1 - Next.js Overview.pdf', type: 'pdf', contentUrl: '#' },
-  { id: 'm2', weekId: 'w1', title: 'Video: Setup Project (YouTube)', type: 'yt_link', contentUrl: 'https://youtube.com/...' },
-  { id: 'm3', weekId: 'w2', title: 'Component Design System.pptx', type: 'ppt', contentUrl: '#' },
+  {
+    id: 'm1',
+    courseId: 1,
+    weekNumber: 1,
+    title: 'Slide Minggu 1 - Next.js Overview.pdf',
+    type: 'pdf',
+    contentUrl: '#',
+  },
+  {
+    id: 'm2',
+    courseId: 1,
+    weekNumber: 1,
+    title: 'Video: Setup Project (YouTube)',
+    type: 'yt_link',
+    contentUrl: 'https://youtube.com/...',
+  },
+  {
+    id: 'm3',
+    courseId: 1,
+    weekNumber: 2,
+    title: 'Component Design System.pptx',
+    type: 'ppt',
+    contentUrl: '#',
+  },
 ];
 
 // src/data/mock/mock-data.ts
@@ -280,4 +306,42 @@ export const mockCourseMaterials: CourseMaterial[] = [
     url: 'https://example.com/basisdata-video.mp4',
   },
   // Tambahkan materi lain sesuai kebutuhan
+];
+
+export type StudentStatus = 'approved' | 'pending';
+
+export type ProfessorStudent = {
+  id: number;
+  name: string;
+  nim: string;
+  status: StudentStatus;
+  course: string;
+  courseId: number;
+};
+
+export const mockProfessorStudents: ProfessorStudent[] = [
+  {
+    id: 1,
+    name: 'Ahmad Fauzi',
+    nim: '230810101',
+    status: 'approved',
+    course: 'Pemrograman Web Lanjutan',
+    courseId: 1,
+  },
+  {
+    id: 2,
+    name: 'Siti Nurhaliza',
+    nim: '230810102',
+    status: 'pending',
+    course: 'Pemrograman Web Lanjutan',
+    courseId: 1,
+  },
+  {
+    id: 3,
+    name: 'Budi Santoso',
+    nim: '230810103',
+    status: 'approved',
+    course: 'Basis Data dan SQL',
+    courseId: 2,
+  },
 ];

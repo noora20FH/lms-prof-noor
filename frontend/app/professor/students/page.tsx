@@ -1,66 +1,286 @@
 'use client';
 
-import { mockCourses } from '@/data/mock/mock-data';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, CheckCircle, Clock } from 'lucide-react';
+import {
+  CheckCircle,
+  Clock,
+  Search,
+  UserPlus,
+  Users,
+} from 'lucide-react';
+import AddStudentModal from '@/components/professor/AddStudentModal';
+import {
+  mockProfessorStudents,
+  type ProfessorStudent,
+  type StudentStatus,
+} from '@/data/mock/mock-data';
 
 export default function ProfessorStudents() {
-  // Mock students untuk demo (nanti diganti dari API enrollment)
-  const mockStudents = [
-    { id: 1, name: "Ahmad Fauzi", nim: "230810101", status: "approved", course: "Pemrograman Web Lanjutan" },
-    { id: 2, name: "Siti Nurhaliza", nim: "230810102", status: "pending", course: "Pemrograman Web Lanjutan" },
-    { id: 3, name: "Budi Santoso", nim: "230810103", status: "approved", course: "Basis Data dan SQL" },
-  ];
+  const [students, setStudents] = useState<ProfessorStudent[]>(
+    mockProfessorStudents
+  );
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeStatus, setActiveStatus] = useState<'all' | StudentStatus>('all');
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+
+  const approvedCount = students.filter(
+    (student) => student.status === 'approved'
+  ).length;
+
+  const pendingCount = students.filter(
+    (student) => student.status === 'pending'
+  ).length;
+
+  const filteredStudents = useMemo(() => {
+    return students.filter((student) => {
+      const keyword = searchQuery.toLowerCase();
+
+      const matchesSearch =
+        student.name.toLowerCase().includes(keyword) ||
+        student.nim.toLowerCase().includes(keyword) ||
+        student.course.toLowerCase().includes(keyword);
+
+      const matchesStatus =
+        activeStatus === 'all' || student.status === activeStatus;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [students, searchQuery, activeStatus]);
+
+  const handleAddStudent = (
+    student: Omit<ProfessorStudent, 'id' | 'courseId'> & {
+      courseId?: number;
+    }
+  ) => {
+    const newStudent: ProfessorStudent = {
+      id: Date.now(),
+      courseId: student.courseId ?? 0,
+      ...student,
+    };
+
+    setStudents((previousStudents) => [newStudent, ...previousStudents]);
+  };
+
+  const handleApproveStudent = (studentId: number) => {
+    setStudents((previousStudents) =>
+      previousStudents.map((student) =>
+        student.id === studentId
+          ? {
+              ...student,
+              status: 'approved',
+            }
+          : student
+      )
+    );
+  };
+
+  const getInitialName = (name: string) => {
+    return name
+      .split(' ')
+      .map((item) => item.charAt(0))
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-bold">Students</h1>
-          <p className="text-gray-500">Daftar mahasiswa & persetujuan enrollment</p>
+          <h1 className="text-3xl font-bold text-gray-900">Students</h1>
+          <p className="text-gray-500">
+            Daftar mahasiswa dan persetujuan enrollment
+          </p>
         </div>
-        <Button className="bg-[#0D542B]">+ Undang Mahasiswa</Button>
+
+        <Button
+          onClick={() => setShowAddStudentModal(true)}
+          className="bg-[#0D542B] hover:bg-[#0A3F21]"
+        >
+          <UserPlus className="mr-2 h-4 w-4" />
+          Undang Mahasiswa
+        </Button>
       </div>
 
-      <div className="bg-white rounded-3xl border shadow-sm">
-        <div className="p-6 border-b flex items-center justify-between">
-          <h2 className="font-semibold text-lg">All Students ({mockStudents.length})</h2>
-          <div className="flex gap-2">
-            <Badge variant="secondary">Approved</Badge>
-            <Badge variant="outline">Pending</Badge>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500">Total Students</p>
+            <Users className="h-5 w-5 text-[#0D542B]" />
+          </div>
+          <p className="mt-2 text-3xl font-semibold text-gray-900">
+            {students.length}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500">Approved</p>
+            <CheckCircle className="h-5 w-5 text-emerald-600" />
+          </div>
+          <p className="mt-2 text-3xl font-semibold text-gray-900">
+            {approvedCount}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500">Pending</p>
+            <Clock className="h-5 w-5 text-amber-600" />
+          </div>
+          <p className="mt-2 text-3xl font-semibold text-gray-900">
+            {pendingCount}
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-4 border-b border-gray-200 p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              All Students ({filteredStudents.length})
+            </h2>
+            <p className="text-sm text-gray-500">
+              Kelola mahasiswa berdasarkan status enrollment.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Cari nama, NIM, atau course"
+                className="w-full rounded-xl border border-gray-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-[#0D542B] focus:ring-1 focus:ring-[#0D542B] sm:w-72"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setActiveStatus('all')}>
+                <Badge
+                  variant={activeStatus === 'all' ? 'default' : 'outline'}
+                  className={
+                    activeStatus === 'all'
+                      ? 'bg-[#0D542B] text-white hover:bg-[#0D542B]'
+                      : 'cursor-pointer'
+                  }
+                >
+                  All
+                </Badge>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveStatus('approved')}
+              >
+                <Badge
+                  variant={
+                    activeStatus === 'approved' ? 'default' : 'secondary'
+                  }
+                  className={
+                    activeStatus === 'approved'
+                      ? 'bg-emerald-600 text-white hover:bg-emerald-600'
+                      : 'cursor-pointer bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                  }
+                >
+                  Approved
+                </Badge>
+              </button>
+
+              <button type="button" onClick={() => setActiveStatus('pending')}>
+                <Badge
+                  variant={activeStatus === 'pending' ? 'default' : 'outline'}
+                  className={
+                    activeStatus === 'pending'
+                      ? 'bg-amber-500 text-white hover:bg-amber-500'
+                      : 'cursor-pointer border-amber-300 text-amber-700'
+                  }
+                >
+                  Pending
+                </Badge>
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="divide-y">
-          {mockStudents.map((student) => (
-            <div key={student.id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="w-9 h-9 bg-[#0D542B]/10 text-[#0D542B] rounded-2xl flex items-center justify-center font-medium">
-                  {student.name.substring(0, 2)}
+        {filteredStudents.length === 0 ? (
+          <div className="p-10 text-center">
+            <Users className="mx-auto mb-3 h-10 w-10 text-gray-400" />
+            <h3 className="font-semibold text-gray-900">
+              Data mahasiswa tidak ditemukan
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Coba gunakan kata kunci atau filter status yang berbeda.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {filteredStudents.map((student) => (
+              <div
+                key={student.id}
+                className="flex flex-col gap-4 p-6 transition-colors hover:bg-gray-50 md:flex-row md:items-center md:justify-between"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0D542B]/10 font-medium text-[#0D542B]">
+                    {getInitialName(student.name)}
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {student.name}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {student.nim} • {student.course}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold">{student.name}</p>
-                  <p className="text-sm text-gray-500">{student.nim} • {student.course}</p>
+
+                <div className="flex items-center gap-3">
+                  {student.status === 'approved' ? (
+                    <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                      <CheckCircle className="mr-1 h-3 w-3" />
+                      Approved
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="border-amber-300 text-amber-700"
+                    >
+                      <Clock className="mr-1 h-3 w-3" />
+                      Pending
+                    </Badge>
+                  )}
+
+                  {student.status === 'pending' && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleApproveStudent(student.id)}
+                      className="bg-[#0D542B] hover:bg-[#0A3F21]"
+                    >
+                      Approve
+                    </Button>
+                  )}
+
+                  <Button size="sm" variant="outline">
+                    Detail
+                  </Button>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-3">
-                {student.status === 'approved' ? (
-                  <Badge className="bg-emerald-100 text-emerald-700">
-                    <CheckCircle className="w-3 h-3 mr-1" /> Approved
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="border-amber-300 text-amber-700">
-                    <Clock className="w-3 h-3 mr-1" /> Pending
-                  </Badge>
-                )}
-                <Button size="sm" variant="outline">Detail</Button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {showAddStudentModal && (
+        <AddStudentModal
+          onClose={() => setShowAddStudentModal(false)}
+          onAddStudent={handleAddStudent}
+        />
+      )}
     </div>
   );
 }
