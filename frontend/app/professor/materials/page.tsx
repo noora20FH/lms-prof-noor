@@ -41,6 +41,19 @@ const DEFAULT_WEEK_TITLES: Record<number, string> = {
   2: 'React Fundamentals',
   3: 'Laravel API & Authentication',
 };
+const normalizeExternalUrl = (value: string) => {
+  const cleanUrl = value.trim();
+
+  if (!cleanUrl) {
+    return '';
+  }
+
+  if (/^https?:\/\//i.test(cleanUrl)) {
+    return cleanUrl;
+  }
+
+  return `https://${cleanUrl}`;
+};
 
 export default function ProfessorMaterials() {
   const [selectedCourseId, setSelectedCourseId] = useState(
@@ -67,21 +80,28 @@ export default function ProfessorMaterials() {
     });
   }, []);
 
-  const addMaterial = (material: NewMaterialPayload) => {
-    const newMaterial: Material = {
-      id:
-        typeof crypto !== 'undefined' && crypto.randomUUID
-          ? crypto.randomUUID()
-          : String(Date.now()),
-      courseId: material.courseId,
-      weekNumber: material.weekNumber,
-      title: material.title,
-      type: material.type,
-      contentUrl: material.contentUrl,
-    };
+const addMaterial = (material: NewMaterialPayload) => {
+  const contentUrl = normalizeExternalUrl(material.contentUrl);
 
-    setMaterials((previousMaterials) => [...previousMaterials, newMaterial]);
+  if (!contentUrl) {
+    window.alert('Link / URL materi wajib diisi.');
+    return;
+  }
+
+  const newMaterial: Material = {
+    id:
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : String(Date.now()),
+    courseId: material.courseId,
+    weekNumber: material.weekNumber,
+    title: material.title,
+    type: material.type,
+    contentUrl,
   };
+
+  setMaterials((previousMaterials) => [...previousMaterials, newMaterial]);
+};
 
   const deleteMaterial = (materialId: string) => {
     const confirmed = window.confirm('Hapus materi ini?');
@@ -240,14 +260,20 @@ export default function ProfessorMaterials() {
                             {material.title}
                           </p>
 
-                          <a
-                            href={material.contentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-1 inline-block text-sm font-medium text-[#0D542B] hover:underline"
-                          >
-                            Lihat materi →
-                          </a>
+{material.contentUrl ? (
+  <a
+    href={normalizeExternalUrl(material.contentUrl)}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="mt-1 inline-block text-sm font-medium text-[#0D542B] hover:underline"
+  >
+    Lihat materi →
+  </a>
+) : (
+  <span className="mt-1 inline-block text-sm text-gray-400">
+    Link belum tersedia
+  </span>
+)}
                         </div>
                       </div>
 
