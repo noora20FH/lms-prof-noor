@@ -1,4 +1,5 @@
 // frontend/data/mock/mock-data.ts
+export type CourseStatus = "active" | "disabled";
 
 export type Course = {
   id: string;
@@ -9,7 +10,9 @@ export type Course = {
   totalStudents: number;
   totalWeeks?: number;
   progress?: number;
+  status: CourseStatus;
 };
+
 
 export type Week = {
   id: string;
@@ -29,6 +32,7 @@ export const mockCourses: Course[] = [
     enrolled: 34,
     totalStudents: 45,
     totalWeeks: 17,
+    status: "active",
   },
   {
     id: "2",
@@ -38,6 +42,7 @@ export const mockCourses: Course[] = [
     enrolled: 28,
     totalStudents: 40,
     totalWeeks: 17,
+    status: "active",
   },
   {
     id: "3",
@@ -47,6 +52,7 @@ export const mockCourses: Course[] = [
     enrolled: 41,
     totalStudents: 50,
     totalWeeks: 17,
+    status: "disabled",
   },
 ];
 
