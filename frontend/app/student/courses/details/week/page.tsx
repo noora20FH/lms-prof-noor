@@ -1,18 +1,26 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { mockStudentCourses, mockCourseMaterials } from '@/data/mock/mock-data';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, ArrowLeft } from 'lucide-react';
 
-export default function StudentCourseWeekDetailPage() {
+function StudentCourseWeekDetailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const courseId = Number(searchParams.get('courseId'));
   const weekNumber = Number(searchParams.get('week'));
 
   const course = mockStudentCourses.find((c) => c.id === courseId);
-  if (!course) return <p className="text-red-500">Kursus tidak ditemukan</p>;
+
+  if (!course) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-500 text-lg">Kursus tidak ditemukan</p>
+      </div>
+    );
+  }
 
   // Ambil materi berdasarkan courseId dan week
   const materials = mockCourseMaterials.filter(
@@ -28,24 +36,31 @@ export default function StudentCourseWeekDetailPage() {
     submitted: false,
   };
 
+  const handleBack = () => {
+    router.push(`/student/courses/details?courseId=${courseId}`);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header Gradient */}
+      {/* HEADER */}
       <div
-        className="rounded-lg p-6 mb-6"
-        style={{ background: 'linear-gradient(135deg, #0F172B 0%, #0D542B 50%, #004F3B 100%)' }}
+        className="rounded-3xl p-8 text-white"
+        style={{
+          background: 'linear-gradient(135deg, #0F172B 0%, #0D542B 50%, #004F3B 100%)',
+        }}
       >
         <button
-          onClick={() => router.push(`/student/courses/details?courseId=${courseId}`)}
-          className="text-white/60 hover:text-white mb-3 flex items-center gap-2"
+          onClick={handleBack}
+          className="mb-4 flex items-center text-sm text-white/70 transition-colors hover:text-white"
         >
-          ← Kembali ke Week List
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Kembali ke Week List
         </button>
-        <h2 className="text-2xl font-semibold text-white">{course.title}</h2>
-        <p className="text-white/70">Week {weekNumber}</p>
+        <h1 className="text-3xl font-bold tracking-tight">{course.title}</h1>
+        <p className="mt-2 text-white/70">Week {weekNumber}</p>
       </div>
 
-      {/* Materials */}
+      {/* MATERIALS */}
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Materials</h3>
         <div className="space-y-3">
@@ -53,88 +68,97 @@ export default function StudentCourseWeekDetailPage() {
             materials.map((material) => (
               <div
                 key={material.id}
-                className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm flex items-center justify-between"
+                className="bg-white rounded-3xl p-4 border border-gray-200 shadow-sm flex items-center justify-between transition-shadow hover:shadow-md"
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-3xl">
                     {material.type === 'pdf' && '📄'}
                     {material.type === 'ppt' && '📊'}
                     {material.type === 'video_link' && '🎥'}
-                  </span>
+                  </div>
                   <div>
-                    <p className="text-gray-900">{material.title}</p>
-                    <p className="text-gray-500 text-sm capitalize">
+                    <p className="font-medium text-gray-900">{material.title}</p>
+                    <p className="text-sm text-gray-500 capitalize">
                       {material.type.replace('_', ' ')}
                     </p>
                   </div>
                 </div>
 
-                {/* Tombol Buka (Link) */}
-                <a
-                  href={material.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="no-underline"
-                >
-                  <Button className="bg-gradient-to-r from-[#0D542B] to-[#004F3B] flex items-center gap-2">
-                    Buka
-                    <ExternalLink className="w-4 h-4" />
-                  </Button>
-                </a>
+                <Button asChild className="bg-gradient-to-r from-[#0D542B] to-[#004F3B]">
+                  <a
+                    href={material.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Buka <ExternalLink className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
               </div>
             ))
           ) : (
-            <p className="text-gray-500 italic">Belum ada materi untuk week ini.</p>
+            <div className="bg-white rounded-3xl p-8 text-center border border-gray-200">
+              <p className="text-gray-500 italic">
+                Belum ada materi untuk Week {weekNumber}.
+              </p>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Assignment */}
+      {/* ASSIGNMENT */}
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Assignment</h3>
-        <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-          <div className="flex justify-between items-start mb-4">
+        <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm">
+          <div className="flex justify-between items-start mb-6">
             <div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">{assignment.title}</h4>
-              <p className="text-gray-600">{assignment.description}</p>
+              <h4 className="text-lg font-semibold text-gray-900">
+                {assignment.title}
+              </h4>
+              <p className="text-gray-600 mt-1">{assignment.description}</p>
             </div>
             {assignment.submitted && (
-              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+              <span className="px-4 py-1 bg-emerald-100 text-emerald-700 rounded-2xl text-sm font-medium">
                 Submitted
               </span>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+          <div className="grid grid-cols-2 gap-6 text-sm">
             <div>
               <p className="text-gray-500">Start Date</p>
-              <p className="text-gray-900">{assignment.startDate}</p>
+              <p className="font-medium text-gray-900">{assignment.startDate}</p>
             </div>
             <div>
               <p className="text-gray-500">Due Date</p>
-              <p className="text-gray-900">{assignment.endDate}</p>
+              <p className="font-medium text-gray-900">{assignment.endDate}</p>
             </div>
           </div>
 
           {!assignment.submitted && (
-            <div className="pt-4 border-t border-gray-200 space-y-3">
+            <div className="mt-8 pt-6 border-t border-gray-200 space-y-6">
               <div>
-                <label className="block text-gray-700 mb-2 text-sm">Upload File (PDF)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload File (PDF)
+                </label>
                 <input
                   type="file"
                   accept=".pdf"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-2xl text-sm focus:outline-none focus:border-[#0D542B]"
                 />
               </div>
+
               <div>
-                <label className="block text-gray-700 mb-2 text-sm">Or Submit Link</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Atau Submit Link
+                </label>
                 <input
                   type="url"
                   placeholder="https://..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-[#0D542B]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-2xl text-sm focus:outline-none focus:border-[#0D542B]"
                 />
               </div>
-              <Button className="w-full bg-gradient-to-r from-[#0D542B] to-[#004F3B]">
+
+              <Button className="w-full bg-gradient-to-r from-[#0D542B] to-[#004F3B] h-12 text-base">
                 Submit Assignment
               </Button>
             </div>
@@ -142,5 +166,13 @@ export default function StudentCourseWeekDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function StudentCourseWeekDetailPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading week detail...</div>}>
+      <StudentCourseWeekDetailContent />
+    </Suspense>
   );
 }
