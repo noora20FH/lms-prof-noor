@@ -351,3 +351,70 @@ export const mockProfessorStudents: ProfessorStudent[] = [
     courseId: 2,
   },
 ];
+
+// Tambahkan setelah mockAssignments
+export type Submission = {
+  id: string;
+  assignmentId: string;
+  studentId: number;
+  studentName: string;
+  nim: string;
+  fileName: string;
+  fileUrl: string;           // link download
+  submittedAt: string;
+  score?: number;
+  feedback?: string;
+  status: 'submitted' | 'graded';
+};
+
+export const mockSubmissions: Submission[] = [
+  {
+    id: 'sub1',
+    assignmentId: '1',                    // Tugas 1 - CRUD API
+    studentId: 1,
+    studentName: 'Ahmad Fauzi',
+    nim: '230810101',
+    fileName: 'DEMO TUGAS PDF.pdf',
+    fileUrl: '/DEMO TUGAS PDF.pdf',       // ← File dari public/DEMO TUGAS PDF.pdf
+    submittedAt: '2026-05-05T10:30:00',
+    score: 88,
+    feedback: 'Bagus, tapi perlu optimasi query.',
+    status: 'graded',
+  },
+  {
+    id: 'sub2',
+    assignmentId: '1',
+    studentId: 2,
+    studentName: 'Siti Nurhaliza',
+    nim: '230810102',
+    fileName: 'DEMO TUGAS PDF.pdf',
+    fileUrl: '/DEMO TUGAS PDF.pdf',
+    submittedAt: '2026-05-06T14:20:00',
+    score: undefined,
+    status: 'submitted',
+  },
+  {
+    id: 'sub3',
+    assignmentId: '3',                    // Tugas 1 CRUD Laravel
+    studentId: 1,
+    studentName: 'Ahmad Fauzi',
+    nim: '230810101',
+    fileName: 'DEMO TUGAS PDF.pdf',
+    fileUrl: '/DEMO TUGAS PDF.pdf',
+    submittedAt: '2026-05-04T09:15:00',
+    score: 95,
+    status: 'graded',
+  },
+  {
+    id: 'sub4',
+    assignmentId: '4',
+    studentId: 3,
+    studentName: 'Budi Santoso',
+    nim: '230810103',
+    fileName: 'DEMO TUGAS PDF.pdf',
+    fileUrl: '/DEMO TUGAS PDF.pdf',
+    submittedAt: '2026-05-07T11:45:00',
+    score: 82,
+    status: 'graded',
+  },
+];
