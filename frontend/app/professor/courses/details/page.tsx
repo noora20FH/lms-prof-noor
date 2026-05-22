@@ -6,6 +6,7 @@ import {
   mockProfessorCourses,
   mockAssignments,
   mockCourseMaterials,
+  mockProfessorStudents,   // ← BARU
 } from '@/data/mock/mock-data';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +25,13 @@ function CourseDetailContent() {
   const numericCourseId = Number(courseId);
 
   const course = mockProfessorCourses.find((item) => item.id === courseId);
+
+  // === DATA DINAMIS MAHASISWA TERDAFTAR (Approved) ===
+  const approvedStudentsCount = mockProfessorStudents.filter(
+    (student) =>
+      student.status === 'approved' && student.courseId === numericCourseId
+  ).length;
+
   const weeks = Array.from({ length: 17 }, (_, i) => i + 1);
 
   if (!course) {
@@ -59,6 +67,7 @@ function CourseDetailContent() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div
         className="rounded-3xl p-8 text-white"
         style={{
@@ -78,25 +87,36 @@ function CourseDetailContent() {
         <p className="mt-2 max-w-2xl text-white/80">{course.description}</p>
       </div>
 
+      {/* Stats Cards - Diperbaiki UI + Data Dinamis */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card className="border border-gray-200 shadow-sm">
+        {/* CARD 1: Mahasiswa Terdaftar (Approved) */}
+        <Card className="border border-gray-200 shadow-sm hover:shadow transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              Enrolled Students
+              Mahasiswa Terdaftar
             </CardTitle>
             <Users className="h-5 w-5 text-emerald-700" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-gray-900">
-              {course.enrolled}
+            <div className="text-4xl font-bold text-gray-900">
+              {approvedStudentsCount}
             </div>
             <p className="mt-1 text-sm text-gray-500">
               dari {course.totalStudents} mahasiswa
             </p>
+            <div className="mt-4 h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-2.5 bg-emerald-600 rounded-full transition-all"
+                style={{
+                  width: `${(approvedStudentsCount / course.totalStudents) * 100}%`,
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-gray-200 shadow-sm">
+        {/* CARD 2: Total Weeks */}
+        <Card className="border border-gray-200 shadow-sm hover:shadow transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
               Total Weeks
@@ -104,12 +124,13 @@ function CourseDetailContent() {
             <BookOpen className="h-5 w-5 text-emerald-700" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-gray-900">17</div>
+            <div className="text-4xl font-bold text-gray-900">17</div>
             <p className="mt-1 text-sm text-gray-500">minggu perkuliahan</p>
           </CardContent>
         </Card>
 
-        <Card className="border border-gray-200 shadow-sm">
+        {/* CARD 3: Assignments */}
+        <Card className="border border-gray-200 shadow-sm hover:shadow transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
               Assignments
@@ -117,7 +138,7 @@ function CourseDetailContent() {
             <ClipboardList className="h-5 w-5 text-emerald-700" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-gray-900">
+            <div className="text-4xl font-bold text-gray-900">
               {
                 mockAssignments.filter(
                   (assignment) => assignment.courseId === numericCourseId
@@ -129,6 +150,7 @@ function CourseDetailContent() {
         </Card>
       </div>
 
+      {/* Course Weeks List */}
       <div>
         <h2 className="mb-4 text-lg font-semibold text-gray-900">
           Course Weeks

@@ -1,9 +1,43 @@
 'use client';
 
-import { mockRecentSubmissions } from '@/data/mock/mock-data';
-import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import { 
+  mockRecentSubmissions,
+  mockProfessorCourses,
+  mockAssignments 
+} from '@/data/mock/mock-data';
 
 export default function ProfessorDashboard() {
+  const router = useRouter();
+
+  // Helper: dapatkan courseId berdasarkan nama course
+  const getCourseIdByName = (courseName: string): string => {
+    const course = mockProfessorCourses.find(
+      (c) => c.title.toLowerCase() === courseName.toLowerCase()
+    );
+    return course?.id || '1';
+  };
+
+  // Helper: cari assignment yang cocok untuk mendapatkan week yang tepat
+  const getWeekAndCourseIdFromSubmission = (submission: any) => {
+    const courseId = getCourseIdByName(submission.course);
+
+    const matchedAssignment = mockAssignments.find(
+      (assignment) =>
+        assignment.title.toLowerCase().includes(submission.assignmentTitle.toLowerCase()) ||
+        submission.assignmentTitle.toLowerCase().includes(assignment.title.toLowerCase())
+    );
+
+    const week = matchedAssignment?.week || 1;
+
+    return { courseId, week };
+  };
+
+  const handleViewSubmission = (submission: any) => {
+    const { courseId, week } = getWeekAndCourseIdFromSubmission(submission);
+    router.push(`/professor/courses/details?courseId=${courseId}&week=${week}`);
+  };
+
   return (
     <div className="space-y-8">
       {/* Gradient Header */}
@@ -23,7 +57,9 @@ export default function ProfessorDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
           <p className="text-sm text-gray-500">Mata Kuliah</p>
-          <p className="text-5xl font-semibold text-[#0D542B] mt-2">5</p>
+          <p className="text-5xl font-semibold text-[#0D542B] mt-2">
+            {mockProfessorCourses.length}
+          </p>
         </div>
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
           <p className="text-sm text-gray-500">Mahasiswa Aktif</p>
@@ -41,17 +77,11 @@ export default function ProfessorDashboard() {
           <h3 className="text-lg font-semibold text-gray-900">
             Submitted Tasks Terbaru
           </h3>
-          <Button
-            variant="outline"
-            className="text-[#0D542B] border-[#0D542B] hover:bg-[#0D542B] hover:text-white"
-          >
-            Lihat Semua Submission →
-          </Button>
         </div>
 
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
+            <table className="w-full min-w-[900px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left p-5 text-gray-700 font-medium">Mahasiswa</th>
@@ -75,6 +105,9 @@ export default function ProfessorDashboard() {
                         <p className="text-xs text-gray-500 mt-0.5">
                           {submission.nim}
                         </p>
+                        <p className="text-xs text-[#0D542B] font-medium mt-0.5">
+                          {submission.class_}
+                        </p>
                       </div>
                     </td>
                     <td className="p-5 text-gray-900 font-medium">
@@ -86,10 +119,8 @@ export default function ProfessorDashboard() {
                     </td>
                     <td className="p-5 text-center">
                       <button
-                        onClick={() =>
-                          alert(`Membuka submission dari ${submission.studentName}\nFile: ${submission.fileName}`)
-                        }
-                        className="inline-flex items-center gap-2 text-[#0D542B] hover:text-[#0A3F21] font-medium transition-colors"
+                        onClick={() => handleViewSubmission(submission)}
+                        className="inline-flex items-center gap-2 text-[#0D542B] hover:text-[#0A3F21] font-medium transition-colors hover:underline"
                       >
                         Lihat
                         <span className="text-xl leading-none">→</span>

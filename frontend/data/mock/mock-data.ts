@@ -213,45 +213,6 @@ export const mockMaterials: Material[] = [
   },
 ];
 
-// src/data/mock/mock-data.ts
-export const mockRecentSubmissions = [
-  {
-    id: 1,
-    studentName: "Budi Santoso",
-    nim: "2021010001",
-    course: "Algoritma dan Pemrograman",
-    assignmentTitle: "Tugas 5 - Sorting Algorithm",
-    submittedAt: "2 jam yang lalu",
-    fileName: "sorting_solution.pdf",
-  },
-  {
-    id: 2,
-    studentName: "Siti Nurhaliza",
-    nim: "2021010002",
-    course: "Basis Data",
-    assignmentTitle: "Project ERD Design",
-    submittedAt: "3 jam yang lalu",
-    fileName: "erd_final.pdf",
-  },
-  {
-    id: 3,
-    studentName: "Ahmad Zaki",
-    nim: "2021010003",
-    course: "Pemrograman Web",
-    assignmentTitle: "Tugas 4 - React Components",
-    submittedAt: "1 hari yang lalu",
-    fileName: "frontend_app.zip",
-  },
-  {
-    id: 4,
-    studentName: "Dewi Lestari",
-    nim: "2021010004",
-    course: "Algoritma dan Pemrograman",
-    assignmentTitle: "Tugas 5 - Sorting Algorithm",
-    submittedAt: "1 hari yang lalu",
-    fileName: "bubble_sort.py",
-  },
-];
 
 export interface CourseMaterial {
   id: number;
@@ -352,15 +313,15 @@ export const mockProfessorStudents: ProfessorStudent[] = [
   },
 ];
 
-// Tambahkan setelah mockAssignments
 export type Submission = {
   id: string;
   assignmentId: string;
   studentId: number;
   studentName: string;
   nim: string;
+  class_: string;                    // ← BARU DITAMBAHKAN
   fileName: string;
-  fileUrl: string;           // link download
+  fileUrl: string;
   submittedAt: string;
   score?: number;
   feedback?: string;
@@ -370,12 +331,13 @@ export type Submission = {
 export const mockSubmissions: Submission[] = [
   {
     id: 'sub1',
-    assignmentId: '1',                    // Tugas 1 - CRUD API
+    assignmentId: '1',
     studentId: 1,
     studentName: 'Ahmad Fauzi',
     nim: '230810101',
+    class_: 'TI-2A',                    // ← BARU
     fileName: 'DEMO TUGAS PDF.pdf',
-    fileUrl: '/DEMO TUGAS PDF.pdf',       // ← File dari public/DEMO TUGAS PDF.pdf
+    fileUrl: '/DEMO TUGAS PDF.pdf',
     submittedAt: '2026-05-05T10:30:00',
     score: 88,
     feedback: 'Bagus, tapi perlu optimasi query.',
@@ -387,6 +349,7 @@ export const mockSubmissions: Submission[] = [
     studentId: 2,
     studentName: 'Siti Nurhaliza',
     nim: '230810102',
+    class_: 'TI-2A',                    // ← BARU
     fileName: 'DEMO TUGAS PDF.pdf',
     fileUrl: '/DEMO TUGAS PDF.pdf',
     submittedAt: '2026-05-06T14:20:00',
@@ -395,14 +358,15 @@ export const mockSubmissions: Submission[] = [
   },
   {
     id: 'sub3',
-    assignmentId: '3',                    // Tugas 1 CRUD Laravel
+    assignmentId: '3',
     studentId: 1,
     studentName: 'Ahmad Fauzi',
     nim: '230810101',
+    class_: 'TI-2A',                    // ← BARU
     fileName: 'DEMO TUGAS PDF.pdf',
     fileUrl: '/DEMO TUGAS PDF.pdf',
     submittedAt: '2026-05-04T09:15:00',
-    score: 95,
+    score: undefined,
     status: 'graded',
   },
   {
@@ -411,10 +375,151 @@ export const mockSubmissions: Submission[] = [
     studentId: 3,
     studentName: 'Budi Santoso',
     nim: '230810103',
+    class_: 'TI-2B',                    // ← BARU
     fileName: 'DEMO TUGAS PDF.pdf',
     fileUrl: '/DEMO TUGAS PDF.pdf',
     submittedAt: '2026-05-07T11:45:00',
     score: 82,
     status: 'graded',
+  },
+];
+
+// ============================================================
+// MOCK RECENT SUBMISSIONS UNTUK DASHBOARD PROFESSOR
+// Hanya menampilkan submission yang BELUM diberi score
+// ============================================================
+
+export const mockRecentSubmissions = [
+  {
+    id: 1,
+    studentName: "Siti Nurhaliza",
+    nim: "230810102",
+    class_: "TI-2A",                    // ← BARU
+    course: "Pemrograman Web Lanjutan",
+    assignmentTitle: "Tugas 1 - CRUD API",
+    submittedAt: "3 jam yang lalu",
+    fileName: "DEMO TUGAS PDF.pdf",
+  },
+  {
+    id: 2,
+    studentName: "Budi Santoso",
+    nim: "230810103",
+    class_: "TI-2B",                    // ← BARU
+    course: "Basis Data dan SQL",
+    assignmentTitle: "Tugas 2 - Database Design & ERD",
+    submittedAt: "6 jam yang lalu",
+    fileName: "erd_design_v2.pdf",
+  },
+  {
+    id: 3,
+    studentName: "Ahmad Fauzi",
+    nim: "230810101",
+    class_: "TI-2A",                    // ← BARU
+    course: "Pemrograman Web Lanjutan",
+    assignmentTitle: "Tugas 3 - Responsive UI",
+    submittedAt: "1 hari yang lalu",
+    fileName: "ui_responsive_component.zip",
+  },
+  {
+    id: 4,
+    studentName: "Dewi Lestari",
+    nim: "230810104",
+    class_: "TI-1I",                    // ← BARU
+    course: "UI/UX Design",
+    assignmentTitle: "Tugas 3 - Responsive UI Figma to Tailwind",
+    submittedAt: "1 hari yang lalu",
+    fileName: "figma_to_tailwind.fig",
+  },
+  {
+    id: 5,
+    studentName: "Rina Melati",
+    nim: "230810105",
+    class_: "TI-2H",                    // ← BARU
+    course: "Pemrograman Web Lanjutan",
+    assignmentTitle: "Quiz Minggu 4 - Authentication",
+    submittedAt: "2 hari yang lalu",
+    fileName: "auth_implementation.pdf",
+  },
+];
+
+// ============================================================
+// TYPE & MOCK DATA UNTUK MAHASISWA (Role Student)
+// Data ini akan digunakan di halaman mahasiswa (tabel users)
+// ============================================================
+
+export type Student = {
+  id: number;
+  name: string;
+  nim: string;
+  class_: string;        // contoh: TI-1I, TI-2H, TI-3A, dst.
+  email: string;
+  password: string;
+};
+
+// Mock data mahasiswa dengan kelas yang bervariasi
+export const mockStudents: Student[] = [
+  {
+    id: 1,
+    name: "Ahmad Fauzi",
+    nim: "230810101",
+    class_: "TI-2A",
+    email: "ahmad.fauzi@students.university.ac.id",
+    password: "password123",
+  },
+  {
+    id: 2,
+    name: "Siti Nurhaliza",
+    nim: "230810102",
+    class_: "TI-2A",
+    email: "siti.nurhaliza@students.university.ac.id",
+    password: "password123",
+  },
+  {
+    id: 3,
+    name: "Budi Santoso",
+    nim: "230810103",
+    class_: "TI-2B",
+    email: "budi.santoso@students.university.ac.id",
+    password: "password123",
+  },
+  {
+    id: 4,
+    name: "Dewi Lestari",
+    nim: "230810104",
+    class_: "TI-1I",
+    email: "dewi.lestari@students.university.ac.id",
+    password: "password123",
+  },
+  {
+    id: 5,
+    name: "Rina Melati",
+    nim: "230810105",
+    class_: "TI-2H",
+    email: "rina.melati@students.university.ac.id",
+    password: "password123",
+  },
+  {
+    id: 6,
+    name: "Fajar Nugroho",
+    nim: "230810106",
+    class_: "TI-1C",
+    email: "fajar.nugroho@students.university.ac.id",
+    password: "password123",
+  },
+  {
+    id: 7,
+    name: "Putri Ayu",
+    nim: "230810107",
+    class_: "TI-3A",
+    email: "putri.ayu@students.university.ac.id",
+    password: "password123",
+  },
+  {
+    id: 8,
+    name: "Eko Prasetyo",
+    nim: "230810108",
+    class_: "TI-2H",
+    email: "eko.prasetyo@students.university.ac.id",
+    password: "password123",
   },
 ];
