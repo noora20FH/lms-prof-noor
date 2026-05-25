@@ -67,6 +67,8 @@ export type Assignment = {
   status: "pending" | "submitted" | "graded";
   submittedDate?: string;
   score?: number;
+  gdriveSubmissionLink?: string;
+  submissionNote?: string;
 };
 
 export const mockAssignments: Assignment[] = [
@@ -78,6 +80,8 @@ export const mockAssignments: Assignment[] = [
     dueDate: "2026-05-10",
     status: "pending" as const,
     daysLeft: 5,
+    gdriveSubmissionLink: "https://drive.google.com/drive/folders/1xY7z9kL2mN3pQ4rS5tU6vW7xY8zA9bC0",
+    submissionNote: "Note: upload tugas di gdrive ini, lalu copy link tugas kalian untuk di upload di halaman Submit tugas",
   },
   {
     id: "2",
@@ -88,6 +92,8 @@ export const mockAssignments: Assignment[] = [
     dueDate: "2026-05-15",
     status: "pending" as const,
     daysLeft: 10,
+    gdriveSubmissionLink: "https://drive.google.com/drive/folders/1xY7z9kL2mN3pQ4rS5tU6vW7xY8zA9bC0",
+    submissionNote: "Note: upload tugas di gdrive ini, lalu copy link tugas kalian untuk di upload di halaman Submit tugas",
   },
   {
     id: "3",
@@ -98,6 +104,8 @@ export const mockAssignments: Assignment[] = [
     dueDate: "2026-05-10",
     daysLeft: 3,
     status: "pending",
+    gdriveSubmissionLink: "https://drive.google.com/drive/folders/1xY7z9kL2mN3pQ4rS5tU6vW7xY8zA9bC0",
+    submissionNote: "Note: upload tugas di gdrive ini, lalu copy link tugas kalian untuk di upload di halaman Submit tugas",
   },
   {
     id: "4",
@@ -110,6 +118,8 @@ export const mockAssignments: Assignment[] = [
     status: "submitted",
     submittedDate: "2026-04-28",
     score: 92,
+    gdriveSubmissionLink: "https://drive.google.com/drive/folders/1xY7z9kL2mN3pQ4rS5tU6vW7xY8zA9bC0",
+    submissionNote: "Note: upload tugas di gdrive ini, lalu copy link tugas kalian untuk di upload di halaman Submit tugas",
   },
   {
     id: "5",
@@ -120,6 +130,8 @@ export const mockAssignments: Assignment[] = [
     dueDate: "2026-05-15",
     daysLeft: 12,
     status: "pending",
+    gdriveSubmissionLink: "https://drive.google.com/drive/folders/1xY7z9kL2mN3pQ4rS5tU6vW7xY8zA9bC0",
+    submissionNote: "Note: upload tugas di gdrive ini, lalu copy link tugas kalian untuk di upload di halaman Submit tugas",
   },
   {
     id: "6",
@@ -132,6 +144,8 @@ export const mockAssignments: Assignment[] = [
     status: "submitted",
     submittedDate: "2026-04-18",
     score: 85,
+    gdriveSubmissionLink: "https://drive.google.com/drive/folders/1xY7z9kL2mN3pQ4rS5tU6vW7xY8zA9bC0",
+    submissionNote: "Note: upload tugas di gdrive ini, lalu copy link tugas kalian untuk di upload di halaman Submit tugas",
   },
 ];
 
@@ -336,8 +350,9 @@ export const mockSubmissions: Submission[] = [
     studentName: 'Ahmad Fauzi',
     nim: '230810101',
     class_: 'TI-2A',                    // ← BARU
-    fileName: 'DEMO TUGAS PDF.pdf',
-    fileUrl: '/DEMO TUGAS PDF.pdf',
+    fileName: "Demo Tugas PDF",
+    fileUrl: "https://drive.google.com/file/d/1JKL012mno/view?usp=sharing",
+
     submittedAt: '2026-05-05T10:30:00',
     score: 88,
     feedback: 'Bagus, tapi perlu optimasi query.',
@@ -350,8 +365,8 @@ export const mockSubmissions: Submission[] = [
     studentName: 'Siti Nurhaliza',
     nim: '230810102',
     class_: 'TI-2A',                    // ← BARU
-    fileName: 'DEMO TUGAS PDF.pdf',
-    fileUrl: '/DEMO TUGAS PDF.pdf',
+    fileName: "Demo Tugas PDF",
+    fileUrl: "https://drive.google.com/file/d/1JKL012mno/view?usp=sharing",
     submittedAt: '2026-05-06T14:20:00',
     score: undefined,
     status: 'submitted',
@@ -363,8 +378,8 @@ export const mockSubmissions: Submission[] = [
     studentName: 'Ahmad Fauzi',
     nim: '230810101',
     class_: 'TI-2A',                    // ← BARU
-    fileName: 'DEMO TUGAS PDF.pdf',
-    fileUrl: '/DEMO TUGAS PDF.pdf',
+    fileName: "Demo Tugas PDF",
+    fileUrl: "https://drive.google.com/file/d/1JKL012mno/view?usp=sharing",
     submittedAt: '2026-05-04T09:15:00',
     score: undefined,
     status: 'graded',
@@ -376,8 +391,8 @@ export const mockSubmissions: Submission[] = [
     studentName: 'Budi Santoso',
     nim: '230810103',
     class_: 'TI-2B',                    // ← BARU
-    fileName: 'DEMO TUGAS PDF.pdf',
-    fileUrl: '/DEMO TUGAS PDF.pdf',
+    fileName: "Demo Tugas PDF",
+    fileUrl: "https://drive.google.com/file/d/1JKL012mno/view?usp=sharing",
     submittedAt: '2026-05-07T11:45:00',
     score: 82,
     status: 'graded',

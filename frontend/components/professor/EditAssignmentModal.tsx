@@ -3,47 +3,51 @@ import { X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 type AssignmentFormData = {
-  id?: string;
+  id: string;
   title: string;
   description: string;
   startDate: string;
   dueDate: string;
   gdriveSubmissionLink: string;
-  submissionNote: string;           // ← FIELD NOTE BARU
+  submissionNote: string;
 };
 
-type CreateAssignmentModalProps = {
+type EditAssignmentModalProps = {
   weekNumber: number;
+  assignment: AssignmentFormData;
   onClose: () => void;
-  onCreate?: (data: AssignmentFormData) => void;
-  onUpdate?: (data: AssignmentFormData) => void;
-  initialData?: Partial<AssignmentFormData>;   // untuk Edit mode
-  isEdit?: boolean;
+  onUpdate: (data: AssignmentFormData) => void;
 };
 
-export default function CreateAssignmentModal({
+export default function EditAssignmentModal({
   weekNumber,
+  assignment,
   onClose,
-  onCreate,
   onUpdate,
-  initialData,
-  isEdit = false,
-}: CreateAssignmentModalProps) {
+}: EditAssignmentModalProps) {
   const [formData, setFormData] = useState<AssignmentFormData>({
-    title: `Tugas Week ${weekNumber}`,
-    description: '',
-    startDate: '',
-    dueDate: '',
-    gdriveSubmissionLink: '',
-    submissionNote: 'Note: upload tugas di gdrive ini, lalu copy link tugas kalian untuk di upload di halaman Submit tugas',
-    ...initialData,
+    id: assignment.id,
+    title: assignment.title,
+    description: assignment.description || '',
+    startDate: assignment.startDate || '',
+    dueDate: assignment.dueDate || '',
+    gdriveSubmissionLink: assignment.gdriveSubmissionLink || '',
+    submissionNote: assignment.submissionNote || 
+      'Note: upload tugas di gdrive ini, lalu copy link tugas kalian untuk di upload di halaman Submit tugas',
   });
 
   useEffect(() => {
-    if (initialData) {
-      setFormData((prev) => ({ ...prev, ...initialData }));
-    }
-  }, [initialData]);
+    setFormData({
+      id: assignment.id,
+      title: assignment.title,
+      description: assignment.description || '',
+      startDate: assignment.startDate || '',
+      dueDate: assignment.dueDate || '',
+      gdriveSubmissionLink: assignment.gdriveSubmissionLink || '',
+      submissionNote: assignment.submissionNote || 
+        'Note: upload tugas di gdrive ini, lalu copy link tugas kalian untuk di upload di halaman Submit tugas',
+    });
+  }, [assignment]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -54,13 +58,7 @@ export default function CreateAssignmentModal({
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (isEdit && onUpdate) {
-      onUpdate(formData);
-    } else if (onCreate) {
-      onCreate(formData);
-    }
-
+    onUpdate(formData);
     onClose();
   };
 
@@ -71,7 +69,7 @@ export default function CreateAssignmentModal({
         <div className="flex items-center justify-between border-b border-gray-200 p-5">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {isEdit ? 'Edit Assignment' : 'Create Assignment'}
+              Edit Assignment
             </h3>
             <p className="text-sm text-gray-500">Week {weekNumber}</p>
           </div>
@@ -159,7 +157,7 @@ export default function CreateAssignmentModal({
             />
           </div>
 
-          {/* NEW: Field Note / Catatan */}
+          {/* Note */}
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
               Catatan / Note untuk Mahasiswa
@@ -169,7 +167,6 @@ export default function CreateAssignmentModal({
               value={formData.submissionNote}
               onChange={handleChange}
               rows={2}
-              placeholder="Catatan tambahan untuk pengumpulan tugas..."
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-[#0D542B] focus:ring-1 focus:ring-[#0D542B]"
             />
           </div>
@@ -183,7 +180,7 @@ export default function CreateAssignmentModal({
               type="submit"
               className="bg-[#0D542B] hover:bg-[#0A3F21]"
             >
-              {isEdit ? 'Update Assignment' : 'Save Assignment'}
+              Update Assignment
             </Button>
           </div>
         </form>
