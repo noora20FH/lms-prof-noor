@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LMS - Universitas Surabaya",
+  title: "LMS Prof. M. Noor Hidayat",
   description: "Learning Management System",
 };
 

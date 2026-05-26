@@ -10,8 +10,9 @@ const navItems = {
   professor: [
     { label: "Dashboard", href: "/professor/dashboard", icon: LayoutDashboard },
     { label: "Mata Kuliah", href: "/professor/courses", icon: BookOpen },
+    { label: "Materi", href: "/professor/materials", icon: FileText },
     { label: "Mahasiswa", href: "/professor/students", icon: Users },
-    { label: "Materials", href: "/professor/materials", icon: FileText },
+    
   ],
   student: [
     { label: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
@@ -71,7 +72,7 @@ export default function Sidebar({
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">LMS</h1>
-            <p className="text-xs text-emerald-400 -mt-1">{userName}</p>
+            <p className="text-xs text-emerald-400 -mt-1">Prof. M. Noor Hidayat</p>
           </div>
         </div>
 

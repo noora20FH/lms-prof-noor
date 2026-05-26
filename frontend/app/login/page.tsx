@@ -153,7 +153,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-8 text-xs text-center text-gray-500">
-            © 2026 LMS - Universitas Surabaya
+            © 2026 LMS Prof. M. Noor Hidayat. All rights reserved.
           </div>
         </CardContent>
       </Card>
