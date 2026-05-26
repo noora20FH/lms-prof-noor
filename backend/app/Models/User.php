@@ -2,32 +2,60 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens;
+    use HasApiTokens, HasFactory, Notifiable;
 
-    protected $fillable = ['name', 'email', 'password', 'role'];
+    /**
+     * Kolom yang boleh diisi massal
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'role',
+    ];
 
-    protected $hidden = ['password', 'remember_token'];
+    /**
+     * Kolom yang disembunyikan saat di-json
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
-    protected $casts = ['email_verified_at' => 'datetime'];
+    /**
+     * Casting tipe data
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password'          => 'hashed',        // ← Rekomendasi Laravel 10/11
+    ];
+
+    // ========================================
+    // RELATIONSHIPS
+    // ========================================
 
     public function profile()
     {
         return $this->hasOne(Profile::class);
     }
 
-    public function courses() // sebagai professor
+    // Sebagai Professor
+    public function courses()
     {
         return $this->hasMany(Course::class, 'professor_id');
     }
 
+    // Sebagai Student
     public function enrollments()
     {
-        return $this->hasMany(CourseEnrollment::class);
+        return $this->hasMany(CourseEnrollment::class, 'student_id');
     }
 
     public function submissions()
