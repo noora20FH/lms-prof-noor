@@ -1,54 +1,44 @@
-// middleware.ts
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
+const protectedRoutes = ["/student", "/professor", "/admin"];
+
+function hasLaravelSession(request: NextRequest) {
+  const cookieNames = request.cookies.getAll().map((cookie) => cookie.name);
+
+  return cookieNames.some((name) => {
+    return (
+      name === "laravel_session" ||
+      name === "laravel-session" ||
+      name === "lms_session" ||
+      name === "lms-session" ||
+      name.endsWith("_session") ||
+      name.endsWith("-session")
+    );
   });
+}
 
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Kalau belum login → redirect ke login
-  if (!token && pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+
+  if (!isProtectedRoute) {
+    return NextResponse.next();
   }
 
-  // 2. Role-based protection
-  if (token) {
-    const role = token.role as string;
+  if (!hasLaravelSession(request)) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
 
-    // Professor hanya boleh akses professor routes
-    if (role === 'professor' && pathname.startsWith('/dashboard/student')) {
-      return NextResponse.redirect(new URL('/dashboard/professor', request.url));
-    }
-
-    // Student hanya boleh akses student routes
-    if (role === 'student' && pathname.startsWith('/dashboard/professor')) {
-      return NextResponse.redirect(new URL('/dashboard/student', request.url));
-    }
-
-    // Blokir akses langsung ke halaman role yang salah
-    if (pathname === '/dashboard' && role === 'professor') {
-      return NextResponse.redirect(new URL('/dashboard/professor', request.url));
-    }
-    if (pathname === '/dashboard' && role === 'student') {
-      return NextResponse.redirect(new URL('/dashboard/student', request.url));
-    }
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
 }
 
-// Matcher: middleware hanya jalan di route berikut
 export const config = {
-  matcher: [
-    '/dashboard/:path*',
-    '/professor/:path*',
-    '/student/:path*',
-    '/courses/:path*',
-    '/assignments/:path*',
-  ],
+  matcher: ["/student/:path*", "/professor/:path*", "/admin/:path*"],
 };

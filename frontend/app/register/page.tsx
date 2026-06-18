@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
+import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,122 +16,156 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { api, csrf, getErrorMessage } from "@/lib/api";
 
 export default function RegisterPage() {
+  const router = useRouter();
+
   const [name, setName] = useState("");
   const [nim, setNim] = useState("");
-  const [class_, setClass_] = useState("");
+  const [kelas, setKelas] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     setLoading(true);
     setError("");
     setSuccess("");
 
     if (password !== confirmPassword) {
-      setError("Password dan konfirmasi password tidak cocok!");
+      setError("Password dan konfirmasi password tidak cocok.");
       setLoading(false);
       return;
     }
 
     try {
-      await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/sanctum/csrf-cookie`, {
-        withCredentials: true,
+      await csrf();
+
+      await api.post("/api/register", {
+        name,
+        nim,
+        class_: kelas,
+        email,
+        password,
+        password_confirmation: confirmPassword,
+        role: "student",
       });
 
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/register`,
-        {
-          name,
-          nim,
-          class: class_,
-          email,
-          password,
-          password_confirmation: confirmPassword,
-          role: "student",
-        },
-        { withCredentials: true }
-      );
+      setSuccess("Registrasi berhasil. Mengalihkan ke halaman login...");
 
-      setSuccess("Registrasi berhasil! Mengalihkan ke halaman login...");
-      setTimeout(() => router.push("/login"), 1500);
-    } catch (err: any) {
-      console.error("Register error:", err.response?.data);
-      setError(
-        err.response?.data?.message ||
-          err.response?.data?.errors?.email?.[0] ||
-          "Registrasi gagal. Silakan coba lagi!"
-      );
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+    } catch (err) {
+      console.error("Register error:", err);
+
+      setError(getErrorMessage(err, "Registrasi gagal. Periksa data Anda."));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0F172B] via-[#0D542B] to-[#004F3B] flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F172B] via-[#0D542B] to-[#004F3B] p-4">
       <Card className="w-full max-w-md bg-white/95 backdrop-blur-xl shadow-2xl border-0">
-        <CardHeader className="space-y-1 text-center pb-6">
-
+        <CardHeader className="space-y-1 text-center">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-[#0D542B] to-[#004F3B] rounded-2xl flex items-center justify-center text-3xl mb-4">
             📚
           </div>
+
           <CardTitle className="text-3xl font-bold text-gray-900">
-            Portal Mahasiswa
+            Daftar Akun
           </CardTitle>
+
           <CardDescription className="text-gray-600">
-            Buat akun baru untuk mengakses LMS
+            Buat akun mahasiswa LMS
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-5 p-6">
-          <form onSubmit={handleRegister} className="space-y-5">
+        <CardContent>
+          <form onSubmit={handleRegister} className="space-y-4">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+
             {success && (
-              <Alert className="border-green-200 bg-green-50 text-green-700">
+              <Alert>
                 <AlertDescription>{success}</AlertDescription>
               </Alert>
             )}
 
             <div className="space-y-2">
               <Label htmlFor="name">Nama Lengkap</Label>
-              <Input id="name" type="text" placeholder="" value={name} onChange={(e) => setName(e.target.value)} required className="h-12" />
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="nim">NIM</Label>
-              <Input id="nim" type="text" placeholder="" value={nim} onChange={(e) => setNim(e.target.value)} required className="h-12" />
+              <Input
+                id="nim"
+                value={nim}
+                onChange={(e) => setNim(e.target.value)}
+                required
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="class_">Kelas</Label>
-              <Input id="class_" type="text" placeholder="contoh: TL-1A" value={class_} onChange={(e) => setClass_(e.target.value)} required className="h-12" />
+              <Label htmlFor="kelas">Kelas</Label>
+              <Input
+                id="kelas"
+                value={kelas}
+                onChange={(e) => setKelas(e.target.value)}
+                required
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12" />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12" />
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={8}
+                required
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-              <Input id="confirmPassword" type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="h-12" />
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                minLength={8}
+                required
+              />
             </div>
 
             <Button
@@ -141,23 +176,22 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Mendaftar...
+                  Mendaftarkan...
                 </>
               ) : (
-                "Daftar Sekarang"
+                "Daftar"
               )}
             </Button>
           </form>
 
-          <div className="text-center text-sm">
+          <div className="mt-6 text-center text-sm">
             <span className="text-gray-600">Sudah punya akun? </span>
-            <Link href="/login" className="font-medium text-[#0D542B] hover:underline">
-              Masuk di sini
+            <Link
+              href="/login"
+              className="font-medium text-[#0D542B] hover:underline"
+            >
+              Masuk
             </Link>
-          </div>
-
-          <div className="text-xs text-center text-gray-500">
-            © 2026 LMS Prof. M. Noor Hidayat. All rights reserved.
           </div>
         </CardContent>
       </Card>

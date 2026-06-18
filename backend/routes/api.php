@@ -5,23 +5,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisterController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Auth menggunakan Laravel Sanctum SPA cookie-based.
-| Frontend wajib memanggil GET /sanctum/csrf-cookie sebelum POST /api/login,
-| POST /api/register, dan POST /api/logout.
-|
-*/
-
 // ==================== AUTH PUBLIC ====================
-Route::post('/register', [RegisterController::class, 'register'])
-    ->middleware('guest');
+Route::post('/register', [RegisterController::class, 'register']);
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])
-    ->middleware('guest')
     ->name('login');
 
 // ==================== AUTH PROTECTED ====================

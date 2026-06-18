@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
+import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,65 +16,77 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { api, csrf, getErrorMessage } from "@/lib/api";
 
-// Import logic demo statis (terpisah)
-import { demoAccounts } from "@/lib/demo-accounts";
+type AuthUser = {
+  id: number;
+  name: string;
+  email: string;
+  nim?: string;
+  class_?: string;
+  role?: string;
+};
+
+type LoginResponse = {
+  message?: string;
+  user: AuthUser;
+};
+
+function dashboardPathByRole(role?: string) {
+  if (role === "professor") return "/professor/dashboard";
+  if (role === "student") return "/student/dashboard";
+
+  return "/dashboard";
+}
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
-const handleLogin = async (e: React.FormEvent) => {
+const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
+
   setLoading(true);
   setError("");
 
   try {
-    // 1. Ambil CSRF Cookie dulu (WAJIB)
-    await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/sanctum/csrf-cookie`,
-      { withCredentials: true }
-    );
+    await csrf();
 
-    // 2. Ambil XSRF-TOKEN dari cookie secara manual (ini yang sering hilang di Next.js)
-    const xsrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
+    const { data } = await api.post<LoginResponse>("/api/login", {
+      email,
+      password,
+    });
 
-    // 3. Kirim login dengan header X-XSRF-TOKEN
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/login`,
-      { email, password },
-      {
-        withCredentials: true,
-        headers: {
-          "X-XSRF-TOKEN": xsrfToken ? decodeURIComponent(xsrfToken) : "",
-        },
-      }
-    );
+    console.log("Login response:", data);
+    console.log("User role:", data.user?.role);
 
-    // Simpan token
-    localStorage.setItem("token", response.data.token);
+    const role = data.user?.role?.toLowerCase();
 
-    // Redirect berdasarkan role
-    const role = response.data.user?.role;
-    if (role === "professor") {
-      router.push("/professor/dashboard");
-    } else if (role === "student") {
-      router.push("/student/dashboard");
+    let dashboardPath = "";
+
+    if (role === "student") {
+      dashboardPath = "/student/dashboard";
+    } else if (role === "professor") {
+      dashboardPath = "/professor/dashboard";
+    } else if (role === "admin") {
+      dashboardPath = "/admin/dashboard";
     } else {
-      router.push("/dashboard");
+      setError(`Role user tidak dikenali: ${data.user?.role ?? "kosong"}`);
+      return;
     }
-  } catch (err: any) {
-    console.error("Login error:", err.response?.data);
+
+    console.log("Redirect to:", dashboardPath);
+
+    window.location.replace(dashboardPath);
+  } catch (err) {
+    console.error("Login error:", err);
+
     setError(
-      err.response?.data?.message || 
-      "Login gagal. Periksa email dan password!"
+      getErrorMessage(err, "Login gagal. Periksa email dan password.")
     );
   } finally {
     setLoading(false);
@@ -87,9 +100,11 @@ const handleLogin = async (e: React.FormEvent) => {
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-[#0D542B] to-[#004F3B] rounded-2xl flex items-center justify-center text-3xl mb-4">
             📚
           </div>
+
           <CardTitle className="text-3xl font-bold text-gray-900">
             LMS Portal
           </CardTitle>
+
           <CardDescription className="text-gray-600">
             Masuk ke akun Anda
           </CardDescription>
@@ -137,7 +152,7 @@ const handleLogin = async (e: React.FormEvent) => {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Logging in...
+                  Masuk...
                 </>
               ) : (
                 "Masuk"
@@ -145,14 +160,19 @@ const handleLogin = async (e: React.FormEvent) => {
             </Button>
           </form>
 
-          {/* Info Demo Accounts */}
-
           <div className="mt-6 p-4 bg-gray-50 rounded-xl text-xs border border-gray-200">
-            <p className="font-medium text-gray-700 mb-2">🔑 Akun Demo (Laravel):</p>
-            <p><strong>Professor:</strong> professor@demo.com</p>
-            <p><strong>Student:</strong> student@demo.com</p>
-            <p className="text-gray-500 mt-1">Password: <span className="font-mono">password</span></p>
-
+            <p className="font-medium text-gray-700 mb-2">
+              🔑 Akun Demo Laravel:
+            </p>
+            <p>
+              <strong>Professor:</strong> professor@demo.com
+            </p>
+            <p>
+              <strong>Student:</strong> student@demo.com
+            </p>
+            <p className="text-gray-500 mt-1">
+              Password: <span className="font-mono">password</span>
+            </p>
           </div>
 
           <div className="mt-6 text-center text-sm">
