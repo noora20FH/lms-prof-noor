@@ -2,16 +2,30 @@
 
 return [
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'register'],
+    /*
+    |--------------------------------------------------------------------------
+    | Cross-Origin Resource Sharing
+    |--------------------------------------------------------------------------
+    |
+    | NextJS harus bisa mengirim cookie ke Laravel.
+    | Karena itu supports_credentials wajib true.
+    |
+    */
+
+    'paths' => [
+        'api/*',
+        'sanctum/csrf-cookie',
+        'login',
+        'logout',
+        'register',
+    ],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-        'http://localhost:3001',
-        'http://127.0.0.1:3001',
-    ],
+    'allowed_origins' => array_filter(array_map('trim', explode(',', env(
+        'CORS_ALLOWED_ORIGINS',
+        'http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001'
+    )))),
 
     'allowed_origins_patterns' => [],
 
@@ -21,5 +35,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,   // ← Paling penting!
+    'supports_credentials' => true,
+
 ];

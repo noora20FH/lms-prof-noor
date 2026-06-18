@@ -12,11 +12,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        /*
+         * Mengaktifkan middleware Sanctum untuk SPA cookie-based.
+         * Request dari domain yang ada di SANCTUM_STATEFUL_DOMAINS akan diproses
+         * dengan cookie, session, dan CSRF Laravel.
+         */
+        $middleware->statefulApi();
+
         $middleware->web(append: [
-            
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
-        $middleware->api(prepend: [\Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

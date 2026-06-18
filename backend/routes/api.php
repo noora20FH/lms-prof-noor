@@ -2,33 +2,41 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisterController;
-use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
-use App\Http\Middleware\VerifyCsrfToken;
 
-// ==================== REGISTER (SP A Stateful) ====================
-Route::middleware([
-    'web',                                      // penting
-    EnsureFrontendRequestsAreStateful::class,   // ini yang memperbaiki CSRF
-    VerifyCsrfToken::class,                     // ini yang memperbaiki CSRF
-])->group(function () {
-    Route::post('/register', [RegisterController::class, 'register']);
-});
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Auth menggunakan Laravel Sanctum SPA cookie-based.
+| Frontend wajib memanggil GET /sanctum/csrf-cookie sebelum POST /api/login,
+| POST /api/register, dan POST /api/logout.
+|
+*/
 
-])->group(function () {
-    Route::post('/register', [RegisterController::class, 'register']);
-});
+// ==================== AUTH PUBLIC ====================
+Route::post('/register', [RegisterController::class, 'register'])
+    ->middleware('guest');
 
-// ==================== LOGIN & LOGOUT (sudah dari Fortify) ====================
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])
-     ->name('login');
+    ->middleware('guest')
+    ->name('login');
 
+// ==================== AUTH PROTECTED ====================
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
-        return $request->user();
+        return $request->user()->only([
+            'id',
+            'name',
+            'email',
+            'nim',
+            'class_',
+            'role',
+        ]);
     });
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
-         ->name('logout');
+        ->name('logout');
 });

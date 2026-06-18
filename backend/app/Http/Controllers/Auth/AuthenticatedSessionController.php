@@ -10,49 +10,55 @@ use Illuminate\Validation\ValidationException;
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Handle login request
+     * Login untuk Sanctum SPA cookie-based.
+     *
+     * Tidak membuat personal access token.
+     * Laravel akan menyimpan status login pada session cookie.
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required|string',
+        $credentials = $request->validate([
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($request->only('email', 'password'))) {
+        if (! Auth::attempt($credentials)) {
             throw ValidationException::withMessages([
                 'email' => ['Email atau password yang Anda masukkan salah.'],
             ]);
         }
 
-        $user = Auth::user();
+        $request->session()->regenerate();
 
-        // Hapus semua token lama
-        $user->tokens()->delete();
-
-        // Buat token baru (cara standar Sanctum)
-        $token = $user->createToken('lms-auth-token')->plainTextToken;
+        $user = $request->user();
 
         return response()->json([
-            'token' => $token,
-            'user'  => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role,
-            ],
+            'message' => 'Login berhasil.',
+            'user' => $user->only([
+                'id',
+                'name',
+                'email',
+                'nim',
+                'class_',
+                'role',
+            ]),
         ], 200);
     }
 
     /**
-     * Handle logout
+     * Logout untuk Sanctum SPA cookie-based.
+     *
+     * Tidak memakai currentAccessToken(), karena login tidak memakai Bearer token.
      */
     public function destroy(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->json([
-            'message' => 'Berhasil logout.'
+            'message' => 'Berhasil logout.',
         ], 200);
     }
 }
