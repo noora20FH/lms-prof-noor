@@ -1,11 +1,12 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { 
+import { useRouter } from "next/navigation";
+import {
   mockRecentSubmissions,
   mockProfessorCourses,
-  mockAssignments 
-} from '@/data/mock/mock-data';
+  mockAssignments,
+} from "@/data/mock/mock-data";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 export default function ProfessorDashboard() {
   const router = useRouter();
@@ -13,19 +14,25 @@ export default function ProfessorDashboard() {
   // Helper: dapatkan courseId berdasarkan nama course
   const getCourseIdByName = (courseName: string): string => {
     const course = mockProfessorCourses.find(
-      (c) => c.title.toLowerCase() === courseName.toLowerCase()
+      (c) => c.title.toLowerCase() === courseName.toLowerCase(),
     );
-    return course?.id || '1';
+    return course?.id || "1";
   };
+  const { user, loading } = useAuthUser();
 
+  const displayName = loading ? "..." : (user?.name ?? "Professor");
   // Helper: cari assignment yang cocok untuk mendapatkan week yang tepat
   const getWeekAndCourseIdFromSubmission = (submission: any) => {
     const courseId = getCourseIdByName(submission.course);
 
     const matchedAssignment = mockAssignments.find(
       (assignment) =>
-        assignment.title.toLowerCase().includes(submission.assignmentTitle.toLowerCase()) ||
-        submission.assignmentTitle.toLowerCase().includes(assignment.title.toLowerCase())
+        assignment.title
+          .toLowerCase()
+          .includes(submission.assignmentTitle.toLowerCase()) ||
+        submission.assignmentTitle
+          .toLowerCase()
+          .includes(assignment.title.toLowerCase()),
     );
 
     const week = matchedAssignment?.week || 1;
@@ -44,12 +51,15 @@ export default function ProfessorDashboard() {
       <div
         className="rounded-3xl p-8 text-white"
         style={{
-          background: 'linear-gradient(135deg, #0F172B 0%, #0D542B 50%, #004F3B 100%)',
+          background:
+            "linear-gradient(135deg, #0F172B 0%, #0D542B 50%, #004F3B 100%)",
         }}
       >
-        <h1 className="text-4xl font-bold tracking-tight">Dashboard Professor</h1>
+        <h1 className="text-4xl font-bold tracking-tight">
+          Dashboard Professor
+        </h1>
         <p className="text-white/70 mt-2 text-lg">
-          Selamat datang kembali, Prof. Noor 👋
+          Selamat datang kembali, {displayName} 👋
         </p>
       </div>
 
@@ -84,11 +94,21 @@ export default function ProfessorDashboard() {
             <table className="w-full min-w-[900px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left p-5 text-gray-700 font-medium">Mahasiswa</th>
-                  <th className="text-left p-5 text-gray-700 font-medium">Tugas</th>
-                  <th className="text-left p-5 text-gray-700 font-medium">Mata Kuliah</th>
-                  <th className="text-left p-5 text-gray-700 font-medium">Waktu Submit</th>
-                  <th className="text-center p-5 text-gray-700 font-medium w-40">Aksi</th>
+                  <th className="text-left p-5 text-gray-700 font-medium">
+                    Mahasiswa
+                  </th>
+                  <th className="text-left p-5 text-gray-700 font-medium">
+                    Tugas
+                  </th>
+                  <th className="text-left p-5 text-gray-700 font-medium">
+                    Mata Kuliah
+                  </th>
+                  <th className="text-left p-5 text-gray-700 font-medium">
+                    Waktu Submit
+                  </th>
+                  <th className="text-center p-5 text-gray-700 font-medium w-40">
+                    Aksi
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
