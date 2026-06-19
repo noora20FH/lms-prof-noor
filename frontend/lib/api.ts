@@ -19,16 +19,21 @@ export const api = axios.create({
   withCredentials: true,
   headers: {
     Accept: "application/json",
-    "Content-Type": "application/json",
     "X-Requested-With": "XMLHttpRequest",
   },
 });
 
 api.interceptors.request.use((config) => {
+  config.headers = config.headers ?? {};
+
   const xsrfToken = getCookie("XSRF-TOKEN");
 
   if (xsrfToken) {
     config.headers["X-XSRF-TOKEN"] = xsrfToken;
+  }
+
+  if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
   }
 
   return config;

@@ -1,11 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import {
-  mockProfessorCourses,
-  mockMaterials,
-  type Material,
-} from '@/data/mock/mock-data';
+import { useEffect, useMemo, useState } from 'react';
+import { api, csrf, getErrorMessage } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -20,7 +16,35 @@ import AddProfessorMaterialModal from '@/components/professor/AddProfessorMateri
 
 const TOTAL_WEEKS = 17;
 
-type MaterialType = 'pdf' | 'ppt' | 'video' | 'yt_link';
+type MaterialType = 'pdf' | 'ppt' | 'video_link' | 'yt_link';
+type CreatableMaterialType = MaterialType;
+
+type ProfessorCourse = {
+  id: number;
+  title: string;
+  code?: string | null;
+  description?: string | null;
+  status?: 'active' | 'disabled';
+  total_weeks?: number | null;
+};
+
+type Material = {
+  id: number;
+  courseId: number;
+  weekNumber: number;
+  title: string;
+  type: MaterialType;
+  contentUrl: string;
+};
+
+type ApiMaterial = {
+  id: number;
+  course_id: number;
+  week_number: number;
+  title: string;
+  type: MaterialType;
+  content_url: string | null;
+};
 
 type SelectedWeek = {
   courseId: number;
@@ -32,7 +56,7 @@ type NewMaterialPayload = {
   courseId: number;
   weekNumber: number;
   title: string;
-  type: MaterialType;
+  type: CreatableMaterialType;
   contentUrl: string;
 };
 
@@ -41,6 +65,17 @@ const DEFAULT_WEEK_TITLES: Record<number, string> = {
   2: 'React Fundamentals',
   3: 'Laravel API & Authentication',
 };
+
+const getApiOrigin = () => {
+  const baseUrl = api.defaults.baseURL ?? 'http://localhost:8000';
+
+  try {
+    return new URL(baseUrl).origin;
+  } catch {
+    return 'http://localhost:8000';
+  }
+};
+
 const normalizeExternalUrl = (value: string) => {
   const cleanUrl = value.trim();
 
@@ -52,21 +87,33 @@ const normalizeExternalUrl = (value: string) => {
     return cleanUrl;
   }
 
+  if (cleanUrl.startsWith('/')) {
+    return `${getApiOrigin()}${cleanUrl}`;
+  }
+
   return `https://${cleanUrl}`;
 };
 
-export default function ProfessorMaterials() {
-  const [selectedCourseId, setSelectedCourseId] = useState(
-    mockProfessorCourses[0]?.id ?? ''
-  );
+const mapApiMaterial = (material: ApiMaterial): Material => ({
+  id: material.id,
+  courseId: Number(material.course_id),
+  weekNumber: Number(material.week_number),
+  title: material.title,
+  type: material.type,
+  contentUrl: material.content_url ?? '',
+});
 
-  const [materials, setMaterials] = useState<Material[]>(mockMaterials);
+export default function ProfessorMaterials() {
+  const [courses, setCourses] = useState<ProfessorCourse[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+
+  const [materials, setMaterials] = useState<Material[]>([]);
   const [selectedWeek, setSelectedWeek] = useState<SelectedWeek | null>(null);
 
   const numericCourseId = Number(selectedCourseId);
 
-  const selectedCourse = mockProfessorCourses.find(
-    (course) => course.id === selectedCourseId
+  const selectedCourse = courses.find(
+    (course) => String(course.id) === selectedCourseId
   );
 
   const weeks = useMemo(() => {
@@ -80,39 +127,113 @@ export default function ProfessorMaterials() {
     });
   }, []);
 
-const addMaterial = (material: NewMaterialPayload) => {
-  const contentUrl = normalizeExternalUrl(material.contentUrl);
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        const response = await api.get<{ courses: ProfessorCourse[] }>(
+          '/api/professor/courses'
+        );
 
-  if (!contentUrl) {
-    window.alert('Link / URL materi wajib diisi.');
-    return;
-  }
+        const loadedCourses = response.data.courses ?? [];
 
-  const newMaterial: Material = {
-    id:
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : String(Date.now()),
-    courseId: material.courseId,
-    weekNumber: material.weekNumber,
-    title: material.title,
-    type: material.type,
-    contentUrl,
+        setCourses(loadedCourses);
+
+        if (loadedCourses.length > 0) {
+          setSelectedCourseId(String(loadedCourses[0].id));
+        }
+      } catch (error) {
+        window.alert(getErrorMessage(error, 'Gagal mengambil data mata kuliah.'));
+      }
+    };
+
+    void loadCourses();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCourseId) {
+      setMaterials([]);
+      return;
+    }
+
+    const loadMaterials = async () => {
+      try {
+        const response = await api.get<{ materials: ApiMaterial[] }>(
+          '/api/professor/materials',
+          {
+            params: {
+              course_id: Number(selectedCourseId),
+            },
+          }
+        );
+
+        setMaterials((response.data.materials ?? []).map(mapApiMaterial));
+      } catch (error) {
+        window.alert(getErrorMessage(error, 'Gagal mengambil data materi.'));
+      }
+    };
+
+    void loadMaterials();
+  }, [selectedCourseId]);
+
+  const addMaterial = async (material: NewMaterialPayload) => {
+    const contentUrl = normalizeExternalUrl(material.contentUrl);
+
+    if (!material.courseId) {
+      const message = 'Pilih mata kuliah terlebih dahulu.';
+      window.alert(message);
+      throw new Error(message);
+    }
+
+    if (!contentUrl) {
+      const message = 'Link / URL materi wajib diisi.';
+      window.alert(message);
+      throw new Error(message);
+    }
+
+    try {
+      await csrf();
+
+      const response = await api.post<{ material: ApiMaterial }>(
+        '/api/professor/materials',
+        {
+          course_id: material.courseId,
+          week_number: material.weekNumber,
+          week_title:
+            DEFAULT_WEEK_TITLES[material.weekNumber] ??
+            `Week ${material.weekNumber}`,
+          title: material.title,
+          type: material.type,
+          content_url: contentUrl,
+        }
+      );
+
+      const newMaterial = mapApiMaterial(response.data.material);
+
+      setMaterials((previousMaterials) => [...previousMaterials, newMaterial]);
+    } catch (error) {
+      const message = getErrorMessage(error, 'Gagal menyimpan materi.');
+      window.alert(message);
+      throw new Error(message);
+    }
   };
 
-  setMaterials((previousMaterials) => [...previousMaterials, newMaterial]);
-};
-
-  const deleteMaterial = (materialId: string) => {
+  const deleteMaterial = async (materialId: number) => {
     const confirmed = window.confirm('Hapus materi ini?');
 
     if (!confirmed) {
       return;
     }
 
-    setMaterials((previousMaterials) =>
-      previousMaterials.filter((material) => material.id !== materialId)
-    );
+    try {
+      await csrf();
+      await api.delete(`/api/professor/materials/${materialId}`);
+
+      setMaterials((previousMaterials) =>
+        previousMaterials.filter((material) => material.id !== materialId)
+      );
+    } catch (error) {
+      window.alert(getErrorMessage(error, 'Gagal menghapus materi.'));
+    }
   };
 
   const getMaterialIcon = (type: MaterialType) => {
@@ -124,7 +245,7 @@ const addMaterial = (material: NewMaterialPayload) => {
       return <File className="h-5 w-5 text-blue-500" />;
     }
 
-    if (type === 'video') {
+    if (type === 'video_link') {
       return <Play className="h-5 w-5 text-emerald-500" />;
     }
 
@@ -138,7 +259,7 @@ const addMaterial = (material: NewMaterialPayload) => {
   const getMaterialTypeLabel = (type: MaterialType) => {
     if (type === 'pdf') return 'PDF';
     if (type === 'ppt') return 'PPT';
-    if (type === 'video') return 'Video';
+    if (type === 'video_link') return 'Video';
     if (type === 'yt_link') return 'YouTube';
 
     return type;
@@ -175,8 +296,8 @@ const addMaterial = (material: NewMaterialPayload) => {
             </SelectTrigger>
 
             <SelectContent>
-              {mockProfessorCourses.map((course) => (
-                <SelectItem key={course.id} value={course.id}>
+              {courses.map((course) => (
+                <SelectItem key={course.id} value={String(course.id)}>
                   {course.title}
                 </SelectItem>
               ))}
@@ -219,13 +340,18 @@ const addMaterial = (material: NewMaterialPayload) => {
 
                 <Button
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
+                    if (!numericCourseId) {
+                      window.alert('Pilih mata kuliah terlebih dahulu.');
+                      return;
+                    }
+
                     setSelectedWeek({
                       courseId: numericCourseId,
                       weekNumber: week.weekNumber,
                       title: `Minggu ${week.weekNumber} - ${week.title}`,
-                    })
-                  }
+                    });
+                  }}
                   className="w-fit bg-[#0D542B] hover:bg-[#0A3F21]"
                 >
                   <Plus className="mr-2 h-4 w-4" />

@@ -9,7 +9,12 @@ class Material extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['week_id', 'title', 'type', 'content_url'];
+    protected $fillable = [
+        'week_id',
+        'title',
+        'type',
+        'content_url',
+    ];
 
     public function week()
     {

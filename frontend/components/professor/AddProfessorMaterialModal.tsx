@@ -1,16 +1,10 @@
+'use client';
 
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-type NewMaterialPayload = {
-  weekId: string;
-  title: string;
-  type: MaterialType;
-  contentUrl: string;
-};
-
-type MaterialType = 'pdf' | 'ppt' | 'video' | 'yt_link';
+type MaterialType = 'pdf' | 'ppt' | 'video_link' | 'yt_link';
 
 type AddProfessorMaterialModalProps = {
   courseId: number;
@@ -23,7 +17,7 @@ type AddProfessorMaterialModalProps = {
     title: string;
     type: MaterialType;
     contentUrl: string;
-  }) => void;
+  }) => Promise<void> | void;
 };
 
 export default function AddProfessorMaterialModal({
@@ -37,22 +31,26 @@ export default function AddProfessorMaterialModal({
   const [type, setType] = useState<MaterialType>('pdf');
   const [contentUrl, setContentUrl] = useState('');
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!title.trim() || !contentUrl.trim()) {
       return;
     }
 
-    onAdd({
-      courseId,
-      weekNumber,
-      title: title.trim(),
-      type,
-      contentUrl: contentUrl.trim(),
-    });
+    try {
+      await onAdd({
+        courseId,
+        weekNumber,
+        title: title.trim(),
+        type,
+        contentUrl: contentUrl.trim(),
+      });
 
-    onClose();
+      onClose();
+    } catch {
+      // Error message is handled by the parent page so the UI stays unchanged.
+    }
   };
 
   return (
@@ -102,7 +100,7 @@ export default function AddProfessorMaterialModal({
             >
               <option value="pdf">PDF</option>
               <option value="ppt">PPT</option>
-              <option value="video">Video</option>
+              <option value="video_link">Video</option>
               <option value="yt_link">YouTube Link</option>
             </select>
           </div>

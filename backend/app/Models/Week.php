@@ -9,7 +9,11 @@ class Week extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['course_id', 'week_number'];
+    protected $fillable = [
+        'course_id',
+        'week_number',
+        'title',
+    ];
 
     public function course()
     {
