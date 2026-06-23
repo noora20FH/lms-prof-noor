@@ -13,13 +13,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type { Submission } from '@/data/mock/mock-data';
+
+export type GradeableSubmission = {
+  id: string;
+  assignmentId: string;
+  studentId: number;
+  studentName: string;
+  nim: string;
+  class_: string;
+  fileName: string;
+  fileUrl: string;
+  submittedAt: string;
+  score?: number | null;
+  feedback?: string | null;
+  status?: 'submitted' | 'graded';
+};
 
 type GradeSubmissionModalProps = {
-  submission: Submission | null;
+  submission: GradeableSubmission | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (submissionId: string, score: number, feedback: string) => void;
+  onSave: (submissionId: string, score: number, feedback: string) => Promise<void> | void;
 };
 
 export default function GradeSubmissionModal({
@@ -37,9 +51,9 @@ export default function GradeSubmissionModal({
       setScore(submission.score?.toString() ?? '');
       setFeedback(submission.feedback ?? '');
     }
-  }, [isOpen, submission]);   // ← Tambah isOpen di dependency
+  }, [isOpen, submission]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!submission) return;
     const numericScore = Number(score);
 
@@ -48,7 +62,7 @@ export default function GradeSubmissionModal({
       return;
     }
 
-    onSave(submission.id, numericScore, feedback);
+    await onSave(submission.id, numericScore, feedback);
     onClose();
   };
 

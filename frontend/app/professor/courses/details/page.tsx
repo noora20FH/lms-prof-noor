@@ -1,13 +1,8 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  mockProfessorCourses,
-  mockAssignments,
-  mockCourseMaterials,
-  mockProfessorStudents,   // ← BARU
-} from '@/data/mock/mock-data';
+import { api, getErrorMessage } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,22 +12,82 @@ import {
 } from '@/components/ui/card';
 import { ArrowLeft, BookOpen, ClipboardList, Users } from 'lucide-react';
 
+type CourseDetail = {
+  id: string;
+  title: string;
+  description: string;
+  capacity: number;
+  total_students: number;
+  total_weeks: number;
+  approved_students_count: number;
+};
+
+type CourseWeek = {
+  id: number;
+  course_id: number;
+  week_number: number;
+  title: string;
+  materials_count: number;
+  assignments_count: number;
+};
+
+type CourseDetailResponse = {
+  course: CourseDetail;
+  weeks: CourseWeek[];
+  stats: {
+    approved_students_count: number;
+    assignments_count: number;
+    total_weeks: number;
+  };
+};
+
 function CourseDetailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const courseId = searchParams.get('courseId') ?? '1';
-  const numericCourseId = Number(courseId);
 
-  const course = mockProfessorCourses.find((item) => item.id === courseId);
+  const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [weeks, setWeeks] = useState<CourseWeek[]>([]);
+  const [assignmentsCount, setAssignmentsCount] = useState(0);
+  const [approvedStudentsCount, setApprovedStudentsCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // === DATA DINAMIS MAHASISWA TERDAFTAR (Approved) ===
-  const approvedStudentsCount = mockProfessorStudents.filter(
-    (student) =>
-      student.status === 'approved' && student.courseId === numericCourseId
-  ).length;
+  useEffect(() => {
+    const loadCourseDetail = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
 
-  const weeks = Array.from({ length: 17 }, (_, i) => i + 1);
+        const response = await api.get<CourseDetailResponse>(
+          `/api/professor/courses/${courseId}/details`
+        );
+
+        setCourse(response.data.course);
+        setWeeks(response.data.weeks);
+        setAssignmentsCount(response.data.stats.assignments_count);
+        setApprovedStudentsCount(response.data.stats.approved_students_count);
+      } catch (error) {
+        setCourse(null);
+        setError(getErrorMessage(error, 'Gagal mengambil detail mata kuliah.'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCourseDetail();
+  }, [courseId]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center text-gray-500">
+          Loading course detail...
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (!course) {
     return (
@@ -51,7 +106,7 @@ function CourseDetailContent() {
               Course tidak ditemukan
             </h2>
             <p className="mt-2 text-gray-500">
-              Data mata kuliah dengan ID tersebut belum tersedia.
+              {error || 'Data mata kuliah dengan ID tersebut belum tersedia.'}
             </p>
           </CardContent>
         </Card>
@@ -102,13 +157,17 @@ function CourseDetailContent() {
               {approvedStudentsCount}
             </div>
             <p className="mt-1 text-sm text-gray-500">
-              dari {course.totalStudents} mahasiswa
+              dari {course.total_students ?? course.capacity} mahasiswa
             </p>
             <div className="mt-4 h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
               <div
                 className="h-2.5 bg-emerald-600 rounded-full transition-all"
                 style={{
-                  width: `${(approvedStudentsCount / course.totalStudents) * 100}%`,
+                  width: `${
+                    course.total_students > 0
+                      ? (approvedStudentsCount / course.total_students) * 100
+                      : 0
+                  }%`,
                 }}
               />
             </div>
@@ -124,7 +183,9 @@ function CourseDetailContent() {
             <BookOpen className="h-5 w-5 text-emerald-700" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-gray-900">17</div>
+            <div className="text-4xl font-bold text-gray-900">
+              {course.total_weeks}
+            </div>
             <p className="mt-1 text-sm text-gray-500">minggu perkuliahan</p>
           </CardContent>
         </Card>
@@ -139,11 +200,7 @@ function CourseDetailContent() {
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold text-gray-900">
-              {
-                mockAssignments.filter(
-                  (assignment) => assignment.courseId === numericCourseId
-                ).length
-              }
+              {assignmentsCount}
             </div>
             <p className="mt-1 text-sm text-gray-500">tugas tersedia</p>
           </CardContent>
@@ -158,30 +215,24 @@ function CourseDetailContent() {
 
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
           {weeks.map((week) => {
-            const materialCount = mockCourseMaterials.filter(
-              (material) =>
-                material.courseId === numericCourseId && material.week === week
-            ).length;
-
-            const assignmentCount = mockAssignments.filter(
-              (assignment) =>
-                assignment.courseId === numericCourseId &&
-                assignment.week === week
-            ).length;
+            const materialCount = week.materials_count;
+            const assignmentCount = week.assignments_count;
 
             return (
               <button
-                key={week}
-                onClick={() => handleWeekSelect(week)}
+                key={week.week_number}
+                onClick={() => handleWeekSelect(week.week_number)}
                 className="flex w-full items-center justify-between border-b border-gray-200 p-4 text-left transition-colors last:border-b-0 hover:bg-gray-50"
               >
                 <div className="flex items-center gap-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#0D542B] to-[#004F3B] font-semibold text-white">
-                    {week}
+                    {week.week_number}
                   </div>
 
                   <div>
-                    <p className="font-medium text-gray-900">Week {week}</p>
+                    <p className="font-medium text-gray-900">
+                      {week.title || `Week ${week.week_number}`}
+                    </p>
                     <p className="text-sm text-gray-500">
                       {materialCount} materials · {assignmentCount} assignments
                     </p>

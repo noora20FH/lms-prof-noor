@@ -1,14 +1,8 @@
 'use client';
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  mockAssignments,
-  mockProfessorCourses,
-  mockSubmissions,
-  mockProfessorStudents,
-  type Submission,
-} from "@/data/mock/mock-data";
+import { api, csrf, getErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -21,9 +15,61 @@ import {
 } from "lucide-react";
 import CreateAssignmentModal from "@/components/professor/CreateAssignmentModal";
 import EditAssignmentModal from "@/components/professor/EditAssignmentModal";
-import GradeSubmissionModal from "@/components/professor/GradeSubmissionModal";
+import GradeSubmissionModal, {
+  type GradeableSubmission,
+} from "@/components/professor/GradeSubmissionModal";
 
 type ActiveTab = "assignments" | "submissions";
+
+type CourseData = {
+  id: string;
+  title: string;
+  description: string;
+  status: "active" | "disabled";
+  capacity: number;
+  total_students: number;
+  total_weeks: number;
+};
+
+type AssignmentData = {
+  id: string;
+  courseId: number;
+  course: string;
+  week: number;
+  title: string;
+  description: string;
+  startDate: string;
+  dueDate: string;
+  daysLeft: number;
+  status: "pending" | "submitted" | "graded";
+  gdriveSubmissionLink: string;
+  submissionNote: string;
+  submissionsCount?: number;
+};
+
+type WeekPayload = {
+  course: CourseData;
+  week: {
+    id: number;
+    week_number: number;
+    title: string;
+  };
+  assignments: AssignmentData[];
+};
+
+type SubmissionsPayload = {
+  submissions: GradeableSubmission[];
+};
+
+type AssignmentFormData = {
+  id?: string;
+  title: string;
+  description: string;
+  startDate: string;
+  dueDate: string;
+  gdriveSubmissionLink: string;
+  submissionNote: string;
+};
 
 function getAssignmentStatusClass(status: string) {
   if (status === "graded") return "bg-blue-100 text-blue-700";
@@ -36,88 +82,161 @@ function CourseWeekDetailContent() {
   const searchParams = useSearchParams();
 
   const rawCourseId = searchParams.get("courseId") ?? "1";
-  const numericCourseId = Number(rawCourseId);
   const weekNumber = Number(searchParams.get("week")) || 1;
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("assignments");
   const [showCreateAssignmentModal, setShowCreateAssignmentModal] = useState(false);
   const [showEditAssignmentModal, setShowEditAssignmentModal] = useState(false);
-  const [editingAssignment, setEditingAssignment] = useState<any>(null);
+  const [editingAssignment, setEditingAssignment] = useState<AssignmentData | null>(null);
 
-  const [gradingSubmission, setGradingSubmission] = useState<Submission | null>(null);
-  const [submissions, setSubmissions] = useState<Submission[]>(mockSubmissions);
+  const [gradingSubmission, setGradingSubmission] = useState<GradeableSubmission | null>(null);
+  const [submissions, setSubmissions] = useState<GradeableSubmission[]>([]);
+  const [assignments, setAssignments] = useState<AssignmentData[]>([]);
+  const [course, setCourse] = useState<CourseData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // ✅ ASSIGNMENTS STATE (CRUD real-time)
-  const [assignments, setAssignments] = useState(() =>
-    mockAssignments.filter(
-      (assignment) =>
-        assignment.courseId === numericCourseId && assignment.week === weekNumber
-    )
-  );
+  useEffect(() => {
+    loadWeekData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawCourseId, weekNumber]);
 
-  const course = mockProfessorCourses.find((item) => item.id === rawCourseId);
+  const loadWeekData = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
 
-  const approvedStudentIds = useMemo(() => {
-    return mockProfessorStudents
-      .filter(
-        (student) =>
-          student.status === "approved" && student.courseId === numericCourseId,
-      )
-      .map((student) => student.id);
-  }, [numericCourseId]);
+      const [weekResponse, submissionsResponse] = await Promise.all([
+        api.get<WeekPayload>(
+          `/api/professor/courses/${rawCourseId}/weeks/${weekNumber}`
+        ),
+        api.get<SubmissionsPayload>(
+          `/api/professor/courses/${rawCourseId}/weeks/${weekNumber}/submissions`
+        ),
+      ]);
+
+      setCourse(weekResponse.data.course);
+      setAssignments(weekResponse.data.assignments);
+      setSubmissions(submissionsResponse.data.submissions);
+    } catch (error) {
+      setCourse(null);
+      setAssignments([]);
+      setSubmissions([]);
+      setError(getErrorMessage(error, "Gagal mengambil data week."));
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const weekSubmissions = useMemo(() => {
     const assignmentIds = assignments.map((a) => a.id);
-    return submissions.filter((sub) => {
-      const isFromThisWeekAssignment = assignmentIds.includes(sub.assignmentId);
-      const isApprovedStudent = approvedStudentIds.includes(sub.studentId);
-      return isFromThisWeekAssignment && isApprovedStudent;
-    });
-  }, [assignments, submissions, approvedStudentIds]);
+    return submissions.filter((sub) => assignmentIds.includes(sub.assignmentId));
+  }, [assignments, submissions]);
 
   const getSubmissionsForAssignment = (assignmentId: string) =>
     weekSubmissions.filter((sub) => sub.assignmentId === assignmentId);
 
-  const handleSaveGrade = (submissionId: string, score: number, feedback: string) => {
-    setSubmissions((prev) =>
-      prev.map((sub) =>
-        sub.id === submissionId
-          ? { ...sub, score, feedback, status: "graded" as const }
-          : sub
-      )
-    );
-  };
+  const handleSaveGrade = async (submissionId: string, score: number, feedback: string) => {
+    try {
+      await csrf();
 
-  // CRUD Assignment
-  const handleCreateAssignment = (data: any) => {
-    const newAssignment = {
-      id: `assign-${Date.now()}`,
-      courseId: numericCourseId,
-      week: weekNumber,
-      status: "pending" as const,
-      daysLeft: 7,
-      course: course?.title || "Unknown Course",
-      ...data,
-    };
-    setAssignments((prev) => [...prev, newAssignment]);
-  };
+      const response = await api.put<{ submission: GradeableSubmission }>(
+        `/api/professor/submissions/${submissionId}/grade`,
+        {
+          score,
+          feedback,
+        }
+      );
 
-  const handleUpdateAssignment = (data: any) => {
-    setAssignments((prev) =>
-      prev.map((a) => (a.id === data.id ? { ...a, ...data } : a))
-    );
-  };
-
-  const handleDeleteAssignment = (id: string) => {
-    if (confirm("Yakin ingin menghapus assignment ini?")) {
-      setAssignments((prev) => prev.filter((a) => a.id !== id));
+      setSubmissions((prev) =>
+        prev.map((sub) =>
+          sub.id === submissionId ? response.data.submission : sub
+        )
+      );
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Gagal menyimpan nilai."));
     }
   };
 
-  const openEditModal = (assignment: any) => {
+  const handleCreateAssignment = async (data: AssignmentFormData) => {
+    try {
+      await csrf();
+
+      const response = await api.post<{ assignment: AssignmentData }>(
+        `/api/professor/courses/${rawCourseId}/weeks/${weekNumber}/assignments`,
+        {
+          title: data.title,
+          description: data.description,
+          start_date: data.startDate || null,
+          end_date: data.dueDate,
+          gdrive_submission_link: data.gdriveSubmissionLink || null,
+          submission_note: data.submissionNote || null,
+        }
+      );
+
+      setAssignments((prev) => [...prev, response.data.assignment]);
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Gagal membuat assignment."));
+    }
+  };
+
+  const handleUpdateAssignment = async (data: AssignmentFormData) => {
+    if (!data.id) return;
+
+    try {
+      await csrf();
+
+      const response = await api.put<{ assignment: AssignmentData }>(
+        `/api/professor/assignments/${data.id}`,
+        {
+          title: data.title,
+          description: data.description,
+          start_date: data.startDate || null,
+          end_date: data.dueDate,
+          gdrive_submission_link: data.gdriveSubmissionLink || null,
+          submission_note: data.submissionNote || null,
+        }
+      );
+
+      setAssignments((prev) =>
+        prev.map((assignment) =>
+          assignment.id === response.data.assignment.id
+            ? response.data.assignment
+            : assignment
+        )
+      );
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Gagal memperbarui assignment."));
+    }
+  };
+
+  const handleDeleteAssignment = async (id: string) => {
+    if (!confirm("Yakin ingin menghapus assignment ini?")) return;
+
+    try {
+      await csrf();
+      await api.delete(`/api/professor/assignments/${id}`);
+      setAssignments((prev) => prev.filter((assignment) => assignment.id !== id));
+      setSubmissions((prev) => prev.filter((submission) => submission.assignmentId !== id));
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Gagal menghapus assignment."));
+    }
+  };
+
+  const openEditModal = (assignment: AssignmentData) => {
     setEditingAssignment(assignment);
     setShowEditAssignmentModal(true);
   };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center text-gray-500">
+          Loading week detail...
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (!course) {
     return (
@@ -129,7 +248,7 @@ function CourseWeekDetailContent() {
         <Card>
           <CardContent className="p-8 text-center">
             <h2 className="text-xl font-semibold text-gray-900">Course tidak ditemukan</h2>
-            <p className="mt-2 text-gray-500">Data mata kuliah dengan ID tersebut belum tersedia.</p>
+            <p className="mt-2 text-gray-500">{error || "Data mata kuliah dengan ID tersebut belum tersedia."}</p>
           </CardContent>
         </Card>
       </div>
@@ -343,7 +462,7 @@ function CourseWeekDetailContent() {
                             </div>
 
                             <div className="flex items-center gap-3">
-                              {sub.score !== undefined && (
+                              {sub.score !== undefined && sub.score !== null && (
                                 <div className="text-center min-w-[60px]">
                                   <span className="text-xs text-gray-500 block">Nilai</span>
                                   <span className="text-3xl font-bold text-emerald-600">{sub.score}</span>
@@ -362,7 +481,7 @@ function CourseWeekDetailContent() {
                                 className="bg-gradient-to-r from-[#0D542B] to-[#004F3B]"
                                 onClick={() => setGradingSubmission(sub)}
                               >
-                                {sub.score !== undefined ? "Edit Nilai" : "Beri Nilai"}
+                                {sub.score !== undefined && sub.score !== null ? "Edit Nilai" : "Beri Nilai"}
                               </Button>
                             </div>
                           </div>

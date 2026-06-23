@@ -9,9 +9,24 @@ class Submission extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['assignment_id', 'student_id', 'file_url', 'link_url', 'submitted_at'];
+    protected $fillable = [
+        'assignment_id',
+        'student_id',
+        'file_url',
+        'link_url',
+        'submitted_at',
+        'score',
+        'feedback',
+        'graded_at',
+        'graded_by',
+        'status',
+    ];
 
-    protected $casts = ['submitted_at' => 'datetime'];
+    protected $casts = [
+        'submitted_at' => 'datetime',
+        'graded_at' => 'datetime',
+        'score' => 'integer',
+    ];
 
     public function assignment()
     {
@@ -21,5 +36,10 @@ class Submission extends Model
     public function student()
     {
         return $this->belongsTo(User::class, 'student_id');
+    }
+
+    public function grader()
+    {
+        return $this->belongsTo(User::class, 'graded_by');
     }
 }

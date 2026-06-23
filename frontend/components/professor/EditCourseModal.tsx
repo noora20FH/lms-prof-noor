@@ -32,7 +32,7 @@ type EditCourseModalProps = {
   isOpen: boolean;
   course: EditableCourseData | null;
   onClose: () => void;
-  onUpdateCourse: (course: UpdateCoursePayload) => void;
+  onUpdateCourse: (course: UpdateCoursePayload) => Promise<void> | void;
 };
 
 const getInitialCourseForm = (
@@ -76,7 +76,7 @@ export default function EditCourseModal({
     onClose();
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const title = courseForm.title.trim();
@@ -93,7 +93,7 @@ export default function EditCourseModal({
       return;
     }
 
-    onUpdateCourse({
+    await onUpdateCourse({
       id: course.id,
       title,
       description,

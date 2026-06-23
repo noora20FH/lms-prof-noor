@@ -23,7 +23,7 @@ type CourseFormState = {
 type AddCourseModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onAddCourse: (course: NewCoursePayload) => void;
+  onAddCourse: (course: NewCoursePayload) => Promise<void> | void;
 };
 
 const initialCourseForm: CourseFormState = {
@@ -60,7 +60,7 @@ export default function AddCourseModal({
     onClose();
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const title = courseForm.title.trim();
@@ -77,7 +77,7 @@ export default function AddCourseModal({
       return;
     }
 
-    onAddCourse({
+    await onAddCourse({
       title,
       description,
       totalStudents,

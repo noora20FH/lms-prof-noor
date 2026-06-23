@@ -9,11 +9,20 @@ class Assignment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['week_id', 'title', 'description', 'file_url', 'start_date', 'end_date'];
+    protected $fillable = [
+        'week_id',
+        'title',
+        'description',
+        'file_url',
+        'gdrive_submission_link',
+        'submission_note',
+        'start_date',
+        'end_date',
+    ];
 
     protected $casts = [
         'start_date' => 'datetime',
-        'end_date'   => 'datetime',
+        'end_date' => 'datetime',
     ];
 
     public function week()

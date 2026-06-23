@@ -16,7 +16,7 @@ type EditAssignmentModalProps = {
   weekNumber: number;
   assignment: AssignmentFormData;
   onClose: () => void;
-  onUpdate: (data: AssignmentFormData) => void;
+  onUpdate: (data: AssignmentFormData) => Promise<void> | void;
 };
 
 export default function EditAssignmentModal({
@@ -56,9 +56,9 @@ export default function EditAssignmentModal({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onUpdate(formData);
+    await onUpdate(formData);
     onClose();
   };
 

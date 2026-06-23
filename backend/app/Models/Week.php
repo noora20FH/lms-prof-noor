@@ -15,6 +15,10 @@ class Week extends Model
         'title',
     ];
 
+    protected $casts = [
+        'week_number' => 'integer',
+    ];
+
     public function course()
     {
         return $this->belongsTo(Course::class);

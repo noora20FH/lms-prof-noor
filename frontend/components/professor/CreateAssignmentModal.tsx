@@ -15,8 +15,8 @@ type AssignmentFormData = {
 type CreateAssignmentModalProps = {
   weekNumber: number;
   onClose: () => void;
-  onCreate?: (data: AssignmentFormData) => void;
-  onUpdate?: (data: AssignmentFormData) => void;
+  onCreate?: (data: AssignmentFormData) => Promise<void> | void;
+  onUpdate?: (data: AssignmentFormData) => Promise<void> | void;
   initialData?: Partial<AssignmentFormData>;   // untuk Edit mode
   isEdit?: boolean;
 };
@@ -52,13 +52,13 @@ export default function CreateAssignmentModal({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (isEdit && onUpdate) {
-      onUpdate(formData);
+      await onUpdate(formData);
     } else if (onCreate) {
-      onCreate(formData);
+      await onCreate(formData);
     }
 
     onClose();

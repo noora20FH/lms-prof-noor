@@ -19,6 +19,11 @@ class Course extends Model
         'total_weeks',
     ];
 
+    protected $casts = [
+        'capacity' => 'integer',
+        'total_weeks' => 'integer',
+    ];
+
     public function professor()
     {
         return $this->belongsTo(User::class, 'professor_id');
