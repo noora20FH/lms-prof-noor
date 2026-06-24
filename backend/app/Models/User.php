@@ -65,4 +65,5 @@ class User extends Authenticatable
     {
         return $this->hasMany(Submission::class, 'student_id');
     }
+    
 }

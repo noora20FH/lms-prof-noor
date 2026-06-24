@@ -62,4 +62,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/materials/{material}', [MaterialController::class, 'update']);
         Route::delete('/materials/{material}', [MaterialController::class, 'destroy']);
     });
+
+
+    Route::prefix('professor/students')
+    ->middleware('auth:sanctum')
+    ->group(function () {
+        Route::get('/', [App\Http\Controllers\Professor\StudentController::class, 'index']);
+        Route::get('/available', [App\Http\Controllers\Professor\StudentController::class, 'availableStudents']);
+    Route::post('/enroll', [App\Http\Controllers\Professor\StudentController::class, 'enroll']);
+    Route::post('/{enrollmentId}/approve', [App\Http\Controllers\Professor\StudentController::class, 'approve']);
+    Route::delete('/{enrollmentId}', [App\Http\Controllers\Professor\StudentController::class, 'reject']);
+    });
 });

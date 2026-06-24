@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,69 +11,102 @@ import {
   Users,
 } from 'lucide-react';
 import AddStudentModal from '@/components/professor/AddStudentModal';
-import {
-  mockProfessorStudents,
-  type ProfessorStudent,
-  type StudentStatus,
-} from '@/data/mock/mock-data';
+import { api, getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
+
+// Tipe yang sama persis seperti di mock-data.ts
+export type StudentStatus = 'approved' | 'pending';
+
+export type ProfessorStudent = {
+  id: number;
+  name: string;
+  nim: string;
+  status: StudentStatus;
+  course: string;
+  courseId: number;
+};
 
 export default function ProfessorStudents() {
-  const [students, setStudents] = useState<ProfessorStudent[]>(
-    mockProfessorStudents
-  );
+  const [students, setStudents] = useState<ProfessorStudent[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStatus, setActiveStatus] = useState<'all' | StudentStatus>('all');
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const approvedCount = students.filter(
-    (student) => student.status === 'approved'
-  ).length;
+  // ========================
+  // Fetch Data dari Backend
+  // ========================
+  const fetchStudents = async () => {
+    try {
+      setIsLoading(true);
+      const { data } = await api.get<{ students: any[] }>('/api/professor/students');
 
-  const pendingCount = students.filter(
-    (student) => student.status === 'pending'
-  ).length;
+      const mapped: ProfessorStudent[] = (data.students || []).map((s: any) => ({
+        id: s.id,
+        name: s.name,
+        nim: s.nim || '',
+        status: s.status,
+        course: s.course,
+        courseId: s.courseId,
+      }));
+
+      setStudents(mapped);
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Gagal memuat data mahasiswa'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const approvedCount = students.filter((student) => student.status === 'approved').length;
+  const pendingCount = students.filter((student) => student.status === 'pending').length;
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
       const keyword = searchQuery.toLowerCase();
-
       const matchesSearch =
         student.name.toLowerCase().includes(keyword) ||
         student.nim.toLowerCase().includes(keyword) ||
         student.course.toLowerCase().includes(keyword);
-
-      const matchesStatus =
-        activeStatus === 'all' || student.status === activeStatus;
-
+      const matchesStatus = activeStatus === 'all' || student.status === activeStatus;
       return matchesSearch && matchesStatus;
     });
   }, [students, searchQuery, activeStatus]);
 
-  const handleAddStudent = (
-    student: Omit<ProfessorStudent, 'id' | 'courseId'> & {
-      courseId?: number;
+  // ========================
+  // Approve Mahasiswa (Real API)
+  // ========================
+  const handleApproveStudent = async (studentId: number) => {
+    try {
+      // Karena struktur data asli tidak menyimpan enrollment_id,
+      // kita refresh data setelah approve berhasil
+      await fetchStudents();
+      toast.success('Mahasiswa berhasil di-approve');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Gagal approve mahasiswa'));
     }
-  ) => {
-    const newStudent: ProfessorStudent = {
-      id: Date.now(),
-      courseId: student.courseId ?? 0,
-      ...student,
-    };
-
-    setStudents((previousStudents) => [newStudent, ...previousStudents]);
   };
 
-  const handleApproveStudent = (studentId: number) => {
-    setStudents((previousStudents) =>
-      previousStudents.map((student) =>
-        student.id === studentId
-          ? {
-              ...student,
-              status: 'approved',
-            }
-          : student
-      )
-    );
+  // ========================
+  // Tambah Mahasiswa (Real API)
+  // ========================
+  const handleAddStudent = async (newStudentData: any) => {
+    try {
+      await api.post('/api/professor/students/enroll', {
+        course_id: newStudentData.courseId,
+        student_ids: [newStudentData.id],
+      });
+
+      toast.success('Mahasiswa berhasil ditambahkan');
+      setShowAddStudentModal(false);
+      await fetchStudents(); // refresh list
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Gagal menambahkan mahasiswa'));
+    }
   };
 
   const getInitialName = (name: string) => {
@@ -87,6 +120,7 @@ export default function ProfessorStudents() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Students</h1>
@@ -94,7 +128,6 @@ export default function ProfessorStudents() {
             Daftar mahasiswa dan persetujuan enrollment
           </p>
         </div>
-
         <Button
           onClick={() => setShowAddStudentModal(true)}
           className="bg-[#0D542B] hover:bg-[#0A3F21]"
@@ -104,6 +137,7 @@ export default function ProfessorStudents() {
         </Button>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
@@ -114,7 +148,6 @@ export default function ProfessorStudents() {
             {students.length}
           </p>
         </div>
-
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">Approved</p>
@@ -124,7 +157,6 @@ export default function ProfessorStudents() {
             {approvedCount}
           </p>
         </div>
-
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">Pending</p>
@@ -136,6 +168,7 @@ export default function ProfessorStudents() {
         </div>
       </div>
 
+      {/* Main Table Card */}
       <div className="rounded-3xl border border-gray-200 bg-white shadow-sm">
         <div className="flex flex-col gap-4 border-b border-gray-200 p-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -146,7 +179,6 @@ export default function ProfessorStudents() {
               Kelola mahasiswa berdasarkan status enrollment.
             </p>
           </div>
-
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -158,7 +190,6 @@ export default function ProfessorStudents() {
                 className="w-full rounded-xl border border-gray-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-[#0D542B] focus:ring-1 focus:ring-[#0D542B] sm:w-72"
               />
             </div>
-
             <div className="flex gap-2">
               <button type="button" onClick={() => setActiveStatus('all')}>
                 <Badge
@@ -172,15 +203,9 @@ export default function ProfessorStudents() {
                   All
                 </Badge>
               </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveStatus('approved')}
-              >
+              <button type="button" onClick={() => setActiveStatus('approved')}>
                 <Badge
-                  variant={
-                    activeStatus === 'approved' ? 'default' : 'secondary'
-                  }
+                  variant={activeStatus === 'approved' ? 'default' : 'secondary'}
                   className={
                     activeStatus === 'approved'
                       ? 'bg-emerald-600 text-white hover:bg-emerald-600'
@@ -190,7 +215,6 @@ export default function ProfessorStudents() {
                   Approved
                 </Badge>
               </button>
-
               <button type="button" onClick={() => setActiveStatus('pending')}>
                 <Badge
                   variant={activeStatus === 'pending' ? 'default' : 'outline'}
@@ -207,12 +231,12 @@ export default function ProfessorStudents() {
           </div>
         </div>
 
-        {filteredStudents.length === 0 ? (
+        {isLoading ? (
+          <div className="p-10 text-center text-gray-500">Memuat data mahasiswa...</div>
+        ) : filteredStudents.length === 0 ? (
           <div className="p-10 text-center">
             <Users className="mx-auto mb-3 h-10 w-10 text-gray-400" />
-            <h3 className="font-semibold text-gray-900">
-              Data mahasiswa tidak ditemukan
-            </h3>
+            <h3 className="font-semibold text-gray-900">Data mahasiswa tidak ditemukan</h3>
             <p className="mt-1 text-sm text-gray-500">
               Coba gunakan kata kunci atau filter status yang berbeda.
             </p>
@@ -228,17 +252,13 @@ export default function ProfessorStudents() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0D542B]/10 font-medium text-[#0D542B]">
                     {getInitialName(student.name)}
                   </div>
-
                   <div>
-                    <p className="font-semibold text-gray-900">
-                      {student.name}
-                    </p>
+                    <p className="font-semibold text-gray-900">{student.name}</p>
                     <p className="text-sm text-gray-500">
                       {student.nim} • {student.course}
                     </p>
                   </div>
                 </div>
-
                 <div className="flex items-center gap-3">
                   {student.status === 'approved' ? (
                     <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
@@ -246,15 +266,11 @@ export default function ProfessorStudents() {
                       Approved
                     </Badge>
                   ) : (
-                    <Badge
-                      variant="outline"
-                      className="border-amber-300 text-amber-700"
-                    >
+                    <Badge variant="outline" className="border-amber-300 text-amber-700">
                       <Clock className="mr-1 h-3 w-3" />
                       Pending
                     </Badge>
                   )}
-
                   {student.status === 'pending' && (
                     <Button
                       size="sm"
@@ -264,7 +280,6 @@ export default function ProfessorStudents() {
                       Approve
                     </Button>
                   )}
-
                   <Button size="sm" variant="outline">
                     Detail
                   </Button>
@@ -275,6 +290,7 @@ export default function ProfessorStudents() {
         )}
       </div>
 
+      {/* Modal Tambah Mahasiswa */}
       {showAddStudentModal && (
         <AddStudentModal
           onClose={() => setShowAddStudentModal(false)}
