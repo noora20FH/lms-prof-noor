@@ -10,6 +10,8 @@ use App\Http\Controllers\Professor\ProfessorSubmissionController;
 use App\Http\Controllers\Professor\MaterialController;
 use App\Http\Controllers\Professor\StudentController;
 use App\Http\Controllers\Professor\ProfessorDashboardController;
+use App\Http\Controllers\Api\Student\CourseWeekController;
+use App\Http\Controllers\Api\Student\MaterialAccessController;
 
 // ==================== AUTH PUBLIC ====================
 Route::post('/register', [RegisterController::class, 'register']);
@@ -68,6 +70,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/materials/{material}', [MaterialController::class, 'destroy']);
     });
 
+
+
+    Route::prefix('student')->group(function () {
+        Route::get('/courses/{course}/weeks', [CourseWeekController::class, 'index']);
+        Route::get('/courses/{course}/weeks/{week}', [CourseWeekController::class, 'show']);
+        Route::get('/materials/{material}/open', [MaterialAccessController::class, 'open'])
+            ->name('student.materials.open');
+    });
 
     Route::prefix('professor/students')->group(function () {
         Route::get('/', [StudentController::class, 'index']);

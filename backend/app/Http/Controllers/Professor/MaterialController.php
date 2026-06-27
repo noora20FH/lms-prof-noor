@@ -7,7 +7,7 @@ use App\Models\Course;
 use App\Models\Material;
 use App\Models\Week;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -15,10 +15,6 @@ use Illuminate\Validation\ValidationException;
 
 class MaterialController extends Controller
 {
-    /**
-     * UI lama masih menampilkan opsi "Video", tetapi migration terbaru kamu
-     * menyimpan video URL sebagai enum "video_link".
-     */
     private array $requestTypes = ['pdf', 'ppt', 'video', 'video_link', 'yt_link'];
 
     private array $fileTypes = ['pdf', 'ppt', 'video'];
@@ -64,8 +60,19 @@ class MaterialController extends Controller
             'course_id' => ['nullable', 'integer', 'exists:courses,id'],
         ]);
 
+        $course = null;
+        $weeks = collect();
+
         if (! empty($validated['course_id'])) {
-            $this->getOwnedCourse((int) $validated['course_id'], $request->user()->id);
+            $course = $this->getOwnedCourse((int) $validated['course_id'], $request->user()->id);
+            $this->ensureCourseWeeks($course);
+
+            $weeks = Week::query()
+                ->where('course_id', $course->id)
+                ->orderBy('week_number')
+                ->get()
+                ->map(fn (Week $week) => $this->weekResponse($week))
+                ->values();
         }
 
         $materials = Material::query()
@@ -73,9 +80,9 @@ class MaterialController extends Controller
             ->whereHas('week.course', function ($query) use ($request) {
                 $query->where('professor_id', $request->user()->id);
             })
-            ->when(! empty($validated['course_id']), function ($query) use ($validated) {
-                $query->whereHas('week', function ($weekQuery) use ($validated) {
-                    $weekQuery->where('course_id', $validated['course_id']);
+            ->when($course, function ($query) use ($course) {
+                $query->whereHas('week', function ($weekQuery) use ($course) {
+                    $weekQuery->where('course_id', $course->id);
                 });
             })
             ->get()
@@ -88,6 +95,7 @@ class MaterialController extends Controller
 
         return response()->json([
             'materials' => $materials,
+            'weeks' => $weeks,
         ]);
     }
 
@@ -97,8 +105,9 @@ class MaterialController extends Controller
 
         $validated = $request->validate([
             'course_id' => ['required', 'integer', 'exists:courses,id'],
-            'week_number' => ['required', 'integer', 'min:1', 'max:17'],
+            'week_number' => ['required', 'integer', 'min:1', 'max:52'],
             'week_title' => ['nullable', 'string', 'max:255'],
+            'unlock_at' => ['required', 'date'],
             'title' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::in($this->requestTypes)],
             'content_url' => ['nullable', 'url', 'max:500'],
@@ -108,12 +117,11 @@ class MaterialController extends Controller
         $course = $this->getOwnedCourse((int) $validated['course_id'], $request->user()->id);
         $weekNumber = (int) $validated['week_number'];
 
-        $week = Week::firstOrCreate(
-            [
-                'course_id' => $course->id,
-                'week_number' => $weekNumber,
-            ],
-            $this->weekCreateDefaults($validated['week_title'] ?? null, $weekNumber)
+        $week = $this->resolveScheduledWeek(
+            $course,
+            $weekNumber,
+            $validated['week_title'] ?? null,
+            $validated['unlock_at']
         );
 
         $contentUrl = $this->resolveContentUrl(
@@ -133,6 +141,7 @@ class MaterialController extends Controller
         return response()->json([
             'message' => 'Materi berhasil ditambahkan.',
             'material' => $this->materialResponse($material->load(['week.course'])),
+            'week' => $this->weekResponse($week->fresh()),
         ], 201);
     }
 
@@ -143,8 +152,9 @@ class MaterialController extends Controller
 
         $validated = $request->validate([
             'course_id' => ['nullable', 'integer', 'exists:courses,id'],
-            'week_number' => ['nullable', 'integer', 'min:1', 'max:17'],
+            'week_number' => ['nullable', 'integer', 'min:1', 'max:52'],
             'week_title' => ['nullable', 'string', 'max:255'],
+            'unlock_at' => ['nullable', 'date'],
             'title' => ['nullable', 'string', 'max:255'],
             'type' => ['nullable', Rule::in($this->requestTypes)],
             'content_url' => ['nullable', 'url', 'max:500'],
@@ -159,12 +169,11 @@ class MaterialController extends Controller
 
         $course = $this->getOwnedCourse($courseId, $request->user()->id);
 
-        $week = Week::firstOrCreate(
-            [
-                'course_id' => $course->id,
-                'week_number' => $weekNumber,
-            ],
-            $this->weekCreateDefaults($validated['week_title'] ?? null, $weekNumber)
+        $week = $this->resolveScheduledWeek(
+            $course,
+            $weekNumber,
+            $validated['week_title'] ?? $material->week->title,
+            $validated['unlock_at'] ?? $material->week->unlock_at?->toISOString()
         );
 
         $updates = [
@@ -189,6 +198,7 @@ class MaterialController extends Controller
         return response()->json([
             'message' => 'Materi berhasil diperbarui.',
             'material' => $this->materialResponse($material->fresh(['week.course'])),
+            'week' => $this->weekResponse($week->fresh()),
         ]);
     }
 
@@ -198,7 +208,6 @@ class MaterialController extends Controller
         $this->ensureMaterialOwner($material, $request->user()->id);
 
         $this->deleteStoredFile($material->content_url);
-
         $material->delete();
 
         return response()->json([
@@ -230,15 +239,42 @@ class MaterialController extends Controller
         }
     }
 
-    private function weekCreateDefaults(?string $weekTitle, int $weekNumber): array
+    private function ensureCourseWeeks(Course $course): void
     {
-        if (! Schema::hasColumn('weeks', 'title')) {
-            return [];
+        $totalWeeks = max(1, (int) ($course->total_weeks ?? 17));
+
+        for ($weekNumber = 1; $weekNumber <= $totalWeeks; $weekNumber++) {
+            Week::firstOrCreate(
+                [
+                    'course_id' => $course->id,
+                    'week_number' => $weekNumber,
+                ],
+                [
+                    'title' => 'Week ' . $weekNumber,
+                ]
+            );
+        }
+    }
+
+    private function resolveScheduledWeek(
+        Course $course,
+        int $weekNumber,
+        ?string $weekTitle,
+        string $unlockAt
+    ): Week {
+        $week = Week::firstOrNew([
+            'course_id' => $course->id,
+            'week_number' => $weekNumber,
+        ]);
+
+        if (! $week->exists || filled($weekTitle)) {
+            $week->title = $weekTitle ?: 'Week ' . $weekNumber;
         }
 
-        return [
-            'title' => $weekTitle ?: 'Week ' . $weekNumber,
-        ];
+        $week->unlock_at = Carbon::parse($unlockAt);
+        $week->save();
+
+        return $week;
     }
 
     private function resolveContentUrl(Request $request, string $type, int $courseId, int $weekNumber): string
@@ -310,6 +346,9 @@ class MaterialController extends Controller
             'course_id' => $material->week->course_id,
             'week_number' => $weekNumber,
             'week_title' => $material->week->title ?? 'Week ' . $weekNumber,
+            'unlock_at' => $material->week->unlock_at?->toISOString(),
+            'is_accessible' => $material->week->is_accessible,
+            'is_locked' => $material->week->is_locked,
             'title' => $material->title,
             'type' => $this->normalizeMaterialTypeForResponse($material->type),
             'content_url' => $this->publicUrl($material->content_url),
@@ -318,21 +357,27 @@ class MaterialController extends Controller
         ];
     }
 
+    private function weekResponse(Week $week): array
+    {
+        return [
+            'id' => (int) $week->id,
+            'course_id' => (int) $week->course_id,
+            'week_number' => (int) $week->week_number,
+            'title' => $week->title ?: 'Week ' . $week->week_number,
+            'unlock_at' => $week->unlock_at?->toISOString(),
+            'due_at' => $week->due_at?->toISOString(),
+            'is_accessible' => $week->is_accessible,
+            'is_locked' => $week->is_locked,
+        ];
+    }
+
     private function normalizeMaterialTypeForDatabase(string $type): string
     {
-        if ($type === 'video') {
-            return 'video_link';
-        }
-
-        return $type;
+        return $type === 'video' ? 'video_link' : $type;
     }
 
     private function normalizeMaterialTypeForResponse(string $type): string
     {
-        if ($type === 'video_link') {
-            return 'video_link';
-        }
-
         return $type;
     }
 

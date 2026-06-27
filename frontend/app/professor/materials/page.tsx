@@ -35,6 +35,7 @@ type Material = {
   title: string;
   type: MaterialType;
   contentUrl: string;
+  unlockAt: string | null;
 };
 
 type ApiMaterial = {
@@ -44,12 +45,25 @@ type ApiMaterial = {
   title: string;
   type: MaterialType;
   content_url: string | null;
+  unlock_at: string | null;
+};
+
+type ApiWeek = {
+  id: number;
+  course_id: number;
+  week_number: number;
+  title: string;
+  unlock_at: string | null;
+  due_at: string | null;
+  is_accessible: boolean;
+  is_locked: boolean;
 };
 
 type SelectedWeek = {
   courseId: number;
   weekNumber: number;
   title: string;
+  unlockAt: string | null;
 };
 
 type NewMaterialPayload = {
@@ -58,6 +72,7 @@ type NewMaterialPayload = {
   title: string;
   type: CreatableMaterialType;
   contentUrl: string;
+  unlockAt: string;
 };
 
 const DEFAULT_WEEK_TITLES: Record<number, string> = {
@@ -101,6 +116,7 @@ const mapApiMaterial = (material: ApiMaterial): Material => ({
   title: material.title,
   type: material.type,
   contentUrl: material.content_url ?? '',
+  unlockAt: material.unlock_at ?? null,
 });
 
 export default function ProfessorMaterials() {
@@ -108,6 +124,7 @@ export default function ProfessorMaterials() {
   const [selectedCourseId, setSelectedCourseId] = useState('');
 
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [weekSchedules, setWeekSchedules] = useState<ApiWeek[]>([]);
   const [selectedWeek, setSelectedWeek] = useState<SelectedWeek | null>(null);
 
   const numericCourseId = Number(selectedCourseId);
@@ -117,7 +134,9 @@ export default function ProfessorMaterials() {
   );
 
   const weeks = useMemo(() => {
-    return Array.from({ length: TOTAL_WEEKS }, (_, index) => {
+    const totalWeeks = selectedCourse?.total_weeks ?? TOTAL_WEEKS;
+
+    return Array.from({ length: totalWeeks }, (_, index) => {
       const weekNumber = index + 1;
 
       return {
@@ -125,7 +144,7 @@ export default function ProfessorMaterials() {
         title: DEFAULT_WEEK_TITLES[weekNumber] ?? `Week ${weekNumber}`,
       };
     });
-  }, []);
+  }, [selectedCourse?.total_weeks]);
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -152,21 +171,23 @@ export default function ProfessorMaterials() {
   useEffect(() => {
     if (!selectedCourseId) {
       setMaterials([]);
+      setWeekSchedules([]);
       return;
     }
 
     const loadMaterials = async () => {
       try {
-        const response = await api.get<{ materials: ApiMaterial[] }>(
-          '/api/professor/materials',
-          {
-            params: {
-              course_id: Number(selectedCourseId),
-            },
-          }
-        );
+        const response = await api.get<{
+          materials: ApiMaterial[];
+          weeks: ApiWeek[];
+        }>('/api/professor/materials', {
+          params: {
+            course_id: Number(selectedCourseId),
+          },
+        });
 
         setMaterials((response.data.materials ?? []).map(mapApiMaterial));
+        setWeekSchedules(response.data.weeks ?? []);
       } catch (error) {
         window.alert(getErrorMessage(error, 'Gagal mengambil data materi.'));
       }
@@ -184,6 +205,12 @@ export default function ProfessorMaterials() {
       throw new Error(message);
     }
 
+    if (!material.unlockAt) {
+      const message = 'Tanggal dan waktu pembukaan week wajib diisi.';
+      window.alert(message);
+      throw new Error(message);
+    }
+
     if (!contentUrl) {
       const message = 'Link / URL materi wajib diisi.';
       window.alert(message);
@@ -193,7 +220,7 @@ export default function ProfessorMaterials() {
     try {
       await csrf();
 
-      const response = await api.post<{ material: ApiMaterial }>(
+      const response = await api.post<{ material: ApiMaterial; week: ApiWeek }>(
         '/api/professor/materials',
         {
           course_id: material.courseId,
@@ -204,12 +231,34 @@ export default function ProfessorMaterials() {
           title: material.title,
           type: material.type,
           content_url: contentUrl,
+          unlock_at: material.unlockAt,
         }
       );
 
       const newMaterial = mapApiMaterial(response.data.material);
 
       setMaterials((previousMaterials) => [...previousMaterials, newMaterial]);
+      setWeekSchedules((previousWeeks) => {
+        const responseWeek = response.data.week;
+
+        if (!responseWeek) {
+          return previousWeeks;
+        }
+
+        const exists = previousWeeks.some(
+          (week) => week.week_number === responseWeek.week_number
+        );
+
+        if (!exists) {
+          return [...previousWeeks, responseWeek].sort(
+            (a, b) => a.week_number - b.week_number
+          );
+        }
+
+        return previousWeeks.map((week) =>
+          week.week_number === responseWeek.week_number ? responseWeek : week
+        );
+      });
     } catch (error) {
       const message = getErrorMessage(error, 'Gagal menyimpan materi.');
       window.alert(message);
@@ -263,6 +312,18 @@ export default function ProfessorMaterials() {
     if (type === 'yt_link') return 'YouTube';
 
     return type;
+  };
+
+  const formatAccessSchedule = (unlockAt: string | null) => {
+    if (!unlockAt) {
+      return 'Jadwal akses belum ditentukan';
+    }
+
+    return `Dibuka ${new Intl.DateTimeFormat('id-ID', {
+      dateStyle: 'long',
+      timeStyle: 'short',
+      timeZone: 'Asia/Jakarta',
+    }).format(new Date(unlockAt))}`;
   };
 
   return (
@@ -322,6 +383,9 @@ export default function ProfessorMaterials() {
               material.courseId === numericCourseId &&
               material.weekNumber === week.weekNumber
           );
+          const weekSchedule = weekSchedules.find(
+            (schedule) => schedule.week_number === week.weekNumber
+          );
 
           return (
             <section
@@ -335,6 +399,9 @@ export default function ProfessorMaterials() {
                   </h2>
                   <p className="mt-1 text-sm text-gray-500">
                     {weekMaterials.length} materi tersedia
+                  </p>
+                  <p className="mt-1 text-xs text-gray-400">
+                    {formatAccessSchedule(weekSchedule?.unlock_at ?? null)}
                   </p>
                 </div>
 
@@ -350,6 +417,7 @@ export default function ProfessorMaterials() {
                       courseId: numericCourseId,
                       weekNumber: week.weekNumber,
                       title: `Minggu ${week.weekNumber} - ${week.title}`,
+                      unlockAt: weekSchedule?.unlock_at ?? null,
                     });
                   }}
                   className="w-fit bg-[#0D542B] hover:bg-[#0A3F21]"
@@ -433,6 +501,7 @@ export default function ProfessorMaterials() {
           courseId={selectedWeek.courseId}
           weekNumber={selectedWeek.weekNumber}
           weekTitle={selectedWeek.title}
+          initialUnlockAt={selectedWeek.unlockAt}
           onClose={() => setSelectedWeek(null)}
           onAdd={addMaterial}
         />
