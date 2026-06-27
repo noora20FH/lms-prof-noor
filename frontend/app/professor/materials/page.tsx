@@ -11,13 +11,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { File, FileText, Play, Plus, Trash2 } from 'lucide-react';
+import {
+  CalendarClock,
+  File,
+  FileText,
+  Lock,
+  Pencil,
+  Play,
+  Plus,
+  Trash2,
+  Unlock,
+} from 'lucide-react';
 import AddProfessorMaterialModal from '@/components/professor/AddProfessorMaterialModal';
+import EditWeekAccessModal from '@/components/professor/EditWeekAccessModal';
 
 const TOTAL_WEEKS = 17;
 
 type MaterialType = 'pdf' | 'ppt' | 'video_link' | 'yt_link';
 type CreatableMaterialType = MaterialType;
+type WeekAccessStatus = 'active' | 'locked' | 'scheduled';
 
 type ProfessorCourse = {
   id: number;
@@ -57,12 +69,26 @@ type ApiWeek = {
   due_at: string | null;
   is_accessible: boolean;
   is_locked: boolean;
+  access_status?: WeekAccessStatus;
 };
 
 type SelectedWeek = {
   courseId: number;
   weekNumber: number;
   title: string;
+  unlockAt: string | null;
+};
+
+type SelectedWeekAccess = {
+  courseId: number;
+  weekNumber: number;
+  title: string;
+  unlockAt: string | null;
+  accessStatus: WeekAccessStatus;
+};
+
+type UpdateWeekAccessPayload = {
+  accessStatus: WeekAccessStatus;
   unlockAt: string | null;
 };
 
@@ -126,6 +152,7 @@ export default function ProfessorMaterials() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [weekSchedules, setWeekSchedules] = useState<ApiWeek[]>([]);
   const [selectedWeek, setSelectedWeek] = useState<SelectedWeek | null>(null);
+  const [editingWeek, setEditingWeek] = useState<SelectedWeekAccess | null>(null);
 
   const numericCourseId = Number(selectedCourseId);
 
@@ -266,6 +293,49 @@ export default function ProfessorMaterials() {
     }
   };
 
+  const updateWeekAccess = async (
+    week: SelectedWeekAccess,
+    payload: UpdateWeekAccessPayload
+  ) => {
+    try {
+      await csrf();
+
+      const response = await api.patch<{ message: string; week: ApiWeek }>(
+        `/api/professor/courses/${week.courseId}/weeks/${week.weekNumber}/access`,
+        {
+          access_status: payload.accessStatus,
+          unlock_at: payload.unlockAt,
+        }
+      );
+
+      setWeekSchedules((previousWeeks) => {
+        const updatedWeek = response.data.week;
+        const exists = previousWeeks.some(
+          (item) => item.week_number === updatedWeek.week_number
+        );
+
+        if (!exists) {
+          return [...previousWeeks, updatedWeek].sort(
+            (a, b) => a.week_number - b.week_number
+          );
+        }
+
+        return previousWeeks.map((item) =>
+          item.week_number === updatedWeek.week_number ? updatedWeek : item
+        );
+      });
+
+      window.alert(response.data.message);
+    } catch (error) {
+      const message = getErrorMessage(
+        error,
+        'Gagal memperbarui status akses week.'
+      );
+      window.alert(message);
+      throw new Error(message);
+    }
+  };
+
   const deleteMaterial = async (materialId: number) => {
     const confirmed = window.confirm('Hapus materi ini?');
 
@@ -312,6 +382,38 @@ export default function ProfessorMaterials() {
     if (type === 'yt_link') return 'YouTube';
 
     return type;
+  };
+
+  const getWeekAccessStatus = (week?: ApiWeek): WeekAccessStatus => {
+    if (week?.access_status) {
+      return week.access_status;
+    }
+
+    if (!week?.unlock_at) {
+      return 'locked';
+    }
+
+    return new Date(week.unlock_at).getTime() <= Date.now()
+      ? 'active'
+      : 'scheduled';
+  };
+
+  const getAccessStatusLabel = (status: WeekAccessStatus) => {
+    if (status === 'active') return 'Aktif';
+    if (status === 'scheduled') return 'Terjadwal';
+    return 'Terkunci';
+  };
+
+  const getAccessStatusClassName = (status: WeekAccessStatus) => {
+    if (status === 'active') {
+      return 'bg-emerald-100 text-emerald-700';
+    }
+
+    if (status === 'scheduled') {
+      return 'bg-amber-100 text-amber-700';
+    }
+
+    return 'bg-gray-100 text-gray-600';
   };
 
   const formatAccessSchedule = (unlockAt: string | null) => {
@@ -386,6 +488,7 @@ export default function ProfessorMaterials() {
           const weekSchedule = weekSchedules.find(
             (schedule) => schedule.week_number === week.weekNumber
           );
+          const accessStatus = getWeekAccessStatus(weekSchedule);
 
           return (
             <section
@@ -400,14 +503,57 @@ export default function ProfessorMaterials() {
                   <p className="mt-1 text-sm text-gray-500">
                     {weekMaterials.length} materi tersedia
                   </p>
-                  <p className="mt-1 text-xs text-gray-400">
-                    {formatAccessSchedule(weekSchedule?.unlock_at ?? null)}
-                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${getAccessStatusClassName(
+                        accessStatus
+                      )}`}
+                    >
+                      {accessStatus === 'active' && (
+                        <Unlock className="h-3.5 w-3.5" />
+                      )}
+                      {accessStatus === 'scheduled' && (
+                        <CalendarClock className="h-3.5 w-3.5" />
+                      )}
+                      {accessStatus === 'locked' && (
+                        <Lock className="h-3.5 w-3.5" />
+                      )}
+                      {getAccessStatusLabel(accessStatus)}
+                    </span>
+
+                    <span className="text-xs text-gray-400">
+                      {formatAccessSchedule(weekSchedule?.unlock_at ?? null)}
+                    </span>
+                  </div>
                 </div>
 
-                <Button
-                  type="button"
-                  onClick={() => {
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                      onClick={() => {
+                      if (!numericCourseId) {
+                        window.alert('Pilih mata kuliah terlebih dahulu.');
+                        return;
+                      }
+
+                      setEditingWeek({
+                        courseId: numericCourseId,
+                        weekNumber: week.weekNumber,
+                        title: `Minggu ${week.weekNumber} - ${week.title}`,
+                        unlockAt: weekSchedule?.unlock_at ?? null,
+                        accessStatus,
+                      });
+                    }}
+                    className="w-fit"
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit Akses
+                  </Button>
+
+                  <Button
+                    type="button"
+                    onClick={() => {
                     if (!numericCourseId) {
                       window.alert('Pilih mata kuliah terlebih dahulu.');
                       return;
@@ -420,11 +566,12 @@ export default function ProfessorMaterials() {
                       unlockAt: weekSchedule?.unlock_at ?? null,
                     });
                   }}
-                  className="w-fit bg-[#0D542B] hover:bg-[#0A3F21]"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Tambah Materi
-                </Button>
+                    className="w-fit bg-[#0D542B] hover:bg-[#0A3F21]"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Tambah Materi
+                  </Button>
+                </div>
               </div>
 
               {weekMaterials.length === 0 ? (
@@ -495,6 +642,16 @@ export default function ProfessorMaterials() {
           );
         })}
       </div>
+
+      {editingWeek && (
+        <EditWeekAccessModal
+          weekTitle={editingWeek.title}
+          initialStatus={editingWeek.accessStatus}
+          initialUnlockAt={editingWeek.unlockAt}
+          onClose={() => setEditingWeek(null)}
+          onSave={(payload) => updateWeekAccess(editingWeek, payload)}
+        />
+      )}
 
       {selectedWeek && (
         <AddProfessorMaterialModal

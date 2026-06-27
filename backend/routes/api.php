@@ -62,6 +62,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/submissions/{submission}/grade', [ProfessorSubmissionController::class, 'grade']);
 
         // Materials routes from the previous materials CRUD feature.
+        Route::patch(
+            '/courses/{course}/weeks/{week}/access',
+            [MaterialController::class, 'updateWeekAccess']
+        );
+
         Route::get('/materials', [MaterialController::class, 'index']);
         Route::post('/materials', [MaterialController::class, 'store']);
         Route::post('/materials/{material}', [MaterialController::class, 'update']);

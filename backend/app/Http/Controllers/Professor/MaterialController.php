@@ -99,6 +99,44 @@ class MaterialController extends Controller
         ]);
     }
 
+    public function updateWeekAccess(Request $request, Course $course, int $week)
+    {
+        $this->ensureProfessor($request);
+
+        $ownedCourse = $this->getOwnedCourse((int) $course->id, $request->user()->id);
+        $this->ensureCourseWeeks($ownedCourse);
+
+        $validated = $request->validate([
+            'access_status' => ['required', Rule::in(['active', 'locked', 'scheduled'])],
+            'unlock_at' => ['nullable', 'date', 'required_if:access_status,scheduled'],
+        ]);
+
+        $courseWeek = Week::query()
+            ->where('course_id', $ownedCourse->id)
+            ->where('week_number', $week)
+            ->firstOrFail();
+
+        $courseWeek->unlock_at = match ($validated['access_status']) {
+            'active' => now(),
+            'scheduled' => Carbon::parse(
+                $validated['unlock_at'],
+                config('app.timezone')
+            ),
+            default => null,
+        };
+
+        $courseWeek->save();
+
+        return response()->json([
+            'message' => match ($validated['access_status']) {
+                'active' => 'Week berhasil diaktifkan.',
+                'scheduled' => 'Jadwal akses week berhasil diperbarui.',
+                default => 'Week berhasil dikunci.',
+            },
+            'week' => $this->weekResponse($courseWeek->fresh()),
+        ]);
+    }
+
     public function store(Request $request)
     {
         $this->ensureProfessor($request);
@@ -368,7 +406,21 @@ class MaterialController extends Controller
             'due_at' => $week->due_at?->toISOString(),
             'is_accessible' => $week->is_accessible,
             'is_locked' => $week->is_locked,
+            'access_status' => $this->weekAccessStatus($week),
         ];
+    }
+
+    private function weekAccessStatus(Week $week): string
+    {
+        if (! $week->unlock_at) {
+            return 'locked';
+        }
+
+        if ($week->unlock_at->isFuture()) {
+            return 'scheduled';
+        }
+
+        return 'active';
     }
 
     private function normalizeMaterialTypeForDatabase(string $type): string
