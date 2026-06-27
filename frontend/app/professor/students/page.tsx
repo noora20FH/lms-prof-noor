@@ -10,8 +10,10 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react';
-import AddStudentModal from '@/components/professor/AddStudentModal';
-import { api, getErrorMessage } from '@/lib/api';
+import AddStudentModal, {
+  type InviteStudentPayload,
+} from '@/components/professor/AddStudentModal';
+import { api, csrf, getErrorMessage } from '@/lib/api';
 import { toast } from 'sonner';
 
 // Tipe yang sama persis seperti di mock-data.ts
@@ -19,8 +21,23 @@ export type StudentStatus = 'approved' | 'pending';
 
 export type ProfessorStudent = {
   id: number;
+  enrollmentId: number;
   name: string;
   nim: string;
+  className: string | null;
+  email: string;
+  status: StudentStatus;
+  course: string;
+  courseId: number;
+};
+
+type ApiProfessorStudent = {
+  id: number;
+  enrollment_id: number;
+  name: string;
+  nim?: string | null;
+  class_?: string | null;
+  email: string;
   status: StudentStatus;
   course: string;
   courseId: number;
@@ -39,15 +56,20 @@ export default function ProfessorStudents() {
   const fetchStudents = async () => {
     try {
       setIsLoading(true);
-      const { data } = await api.get<{ students: any[] }>('/api/professor/students');
+      const { data } = await api.get<{ students: ApiProfessorStudent[] }>(
+        '/api/professor/students'
+      );
 
-      const mapped: ProfessorStudent[] = (data.students || []).map((s: any) => ({
-        id: s.id,
-        name: s.name,
-        nim: s.nim || '',
-        status: s.status,
-        course: s.course,
-        courseId: s.courseId,
+      const mapped: ProfessorStudent[] = (data.students ?? []).map((student) => ({
+        id: Number(student.id),
+        enrollmentId: Number(student.enrollment_id),
+        name: student.name,
+        nim: student.nim ?? '',
+        className: student.class_ ?? null,
+        email: student.email,
+        status: student.status,
+        course: student.course,
+        courseId: Number(student.courseId),
       }));
 
       setStudents(mapped);
@@ -59,7 +81,7 @@ export default function ProfessorStudents() {
   };
 
   useEffect(() => {
-    fetchStudents();
+    void fetchStudents();
   }, []);
 
   const approvedCount = students.filter((student) => student.status === 'approved').length;
@@ -80,11 +102,19 @@ export default function ProfessorStudents() {
   // ========================
   // Approve Mahasiswa (Real API)
   // ========================
-  const handleApproveStudent = async (studentId: number) => {
+  const handleApproveStudent = async (enrollmentId: number) => {
     try {
-      // Karena struktur data asli tidak menyimpan enrollment_id,
-      // kita refresh data setelah approve berhasil
-      await fetchStudents();
+      await csrf();
+      await api.post(`/api/professor/students/${enrollmentId}/approve`);
+
+      setStudents((currentStudents) =>
+        currentStudents.map((student) =>
+          student.enrollmentId === enrollmentId
+            ? { ...student, status: 'approved' }
+            : student
+        )
+      );
+
       toast.success('Mahasiswa berhasil di-approve');
     } catch (err) {
       toast.error(getErrorMessage(err, 'Gagal approve mahasiswa'));
@@ -94,18 +124,25 @@ export default function ProfessorStudents() {
   // ========================
   // Tambah Mahasiswa (Real API)
   // ========================
-  const handleAddStudent = async (newStudentData: any) => {
+  const handleAddStudent = async (newStudentData: InviteStudentPayload) => {
     try {
-      await api.post('/api/professor/students/enroll', {
-        course_id: newStudentData.courseId,
-        student_ids: [newStudentData.id],
-      });
+      await csrf();
 
-      toast.success('Mahasiswa berhasil ditambahkan');
+      const { data } = await api.post<{ message?: string }>(
+        '/api/professor/students/enroll',
+        {
+          course_id: newStudentData.courseId,
+          student_ids: [newStudentData.studentId],
+        }
+      );
+
+      toast.success(data.message ?? 'Mahasiswa berhasil ditambahkan');
       setShowAddStudentModal(false);
-      await fetchStudents(); // refresh list
+      await fetchStudents();
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Gagal menambahkan mahasiswa'));
+      const message = getErrorMessage(err, 'Gagal menambahkan mahasiswa');
+      toast.error(message);
+      throw new Error(message);
     }
   };
 
@@ -245,7 +282,7 @@ export default function ProfessorStudents() {
           <div className="divide-y divide-gray-200">
             {filteredStudents.map((student) => (
               <div
-                key={student.id}
+                key={student.enrollmentId}
                 className="flex flex-col gap-4 p-6 transition-colors hover:bg-gray-50 md:flex-row md:items-center md:justify-between"
               >
                 <div className="flex items-center gap-4">
@@ -274,7 +311,7 @@ export default function ProfessorStudents() {
                   {student.status === 'pending' && (
                     <Button
                       size="sm"
-                      onClick={() => handleApproveStudent(student.id)}
+                      onClick={() => handleApproveStudent(student.enrollmentId)}
                       className="bg-[#0D542B] hover:bg-[#0A3F21]"
                     >
                       Approve

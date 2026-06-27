@@ -8,6 +8,8 @@ use App\Http\Controllers\Professor\ProfessorCourseController;
 use App\Http\Controllers\Professor\ProfessorAssignmentController;
 use App\Http\Controllers\Professor\ProfessorSubmissionController;
 use App\Http\Controllers\Professor\MaterialController;
+use App\Http\Controllers\Professor\StudentController;
+use App\Http\Controllers\Professor\ProfessorDashboardController;
 
 // ==================== AUTH PUBLIC ====================
 Route::post('/register', [RegisterController::class, 'register']);
@@ -32,6 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('logout');
 
     Route::prefix('professor')->group(function () {
+        // Dashboard database summary
+        Route::get('/dashboard', [ProfessorDashboardController::class, 'index']);
+
         // Courses CRUD
         Route::get('/courses', [ProfessorCourseController::class, 'index']);
         Route::post('/courses', [ProfessorCourseController::class, 'store']);
@@ -64,13 +69,15 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 
-    Route::prefix('professor/students')
-    ->middleware('auth:sanctum')
-    ->group(function () {
-        Route::get('/', [App\Http\Controllers\Professor\StudentController::class, 'index']);
-        Route::get('/available', [App\Http\Controllers\Professor\StudentController::class, 'availableStudents']);
-    Route::post('/enroll', [App\Http\Controllers\Professor\StudentController::class, 'enroll']);
-    Route::post('/{enrollmentId}/approve', [App\Http\Controllers\Professor\StudentController::class, 'approve']);
-    Route::delete('/{enrollmentId}', [App\Http\Controllers\Professor\StudentController::class, 'reject']);
+    Route::prefix('professor/students')->group(function () {
+        Route::get('/', [StudentController::class, 'index']);
+        Route::get('/available', [StudentController::class, 'availableStudents']);
+        Route::post('/enroll', [StudentController::class, 'enroll']);
+        Route::get('/{enrollmentId}', [StudentController::class, 'show']);
+        Route::put('/{enrollmentId}', [StudentController::class, 'update']);
+        Route::patch('/{enrollmentId}', [StudentController::class, 'update']);
+        Route::post('/{enrollmentId}/approve', [StudentController::class, 'approve']);
+        Route::delete('/{enrollmentId}', [StudentController::class, 'destroy']);
     });
+
 });

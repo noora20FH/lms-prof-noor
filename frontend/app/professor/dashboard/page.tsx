@@ -1,48 +1,86 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  mockRecentSubmissions,
-  mockProfessorCourses,
-  mockAssignments,
-} from "@/data/mock/mock-data";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { api, getErrorMessage } from "@/lib/api";
+import { toast } from "sonner";
+
+type DashboardStats = {
+  courses: number;
+  active_students: number;
+  pending_assignments: number;
+};
+
+type RecentSubmission = {
+  id: number;
+  student_name: string;
+  nim: string;
+  class_: string;
+  assignment_title: string;
+  course: string;
+  course_id: number;
+  week: number;
+  submitted_at: string | null;
+  status: "submitted" | "graded";
+};
+
+type DashboardResponse = {
+  stats: DashboardStats;
+  recent_submissions: RecentSubmission[];
+};
+
+const initialStats: DashboardStats = {
+  courses: 0,
+  active_students: 0,
+  pending_assignments: 0,
+};
+
+function formatSubmittedAt(value: string | null): string {
+  if (!value) return "-";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
 
 export default function ProfessorDashboard() {
   const router = useRouter();
-
-  // Helper: dapatkan courseId berdasarkan nama course
-  const getCourseIdByName = (courseName: string): string => {
-    const course = mockProfessorCourses.find(
-      (c) => c.title.toLowerCase() === courseName.toLowerCase(),
-    );
-    return course?.id || "1";
-  };
   const { user, loading } = useAuthUser();
+  const [stats, setStats] = useState<DashboardStats>(initialStats);
+  const [recentSubmissions, setRecentSubmissions] = useState<RecentSubmission[]>([]);
 
   const displayName = loading ? "..." : (user?.name ?? "Professor");
-  // Helper: cari assignment yang cocok untuk mendapatkan week yang tepat
-  const getWeekAndCourseIdFromSubmission = (submission: any) => {
-    const courseId = getCourseIdByName(submission.course);
 
-    const matchedAssignment = mockAssignments.find(
-      (assignment) =>
-        assignment.title
-          .toLowerCase()
-          .includes(submission.assignmentTitle.toLowerCase()) ||
-        submission.assignmentTitle
-          .toLowerCase()
-          .includes(assignment.title.toLowerCase()),
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        const { data } = await api.get<DashboardResponse>(
+          "/api/professor/dashboard",
+        );
+
+        setStats(data.stats ?? initialStats);
+        setRecentSubmissions(data.recent_submissions ?? []);
+      } catch (error) {
+        toast.error(getErrorMessage(error, "Gagal memuat data dashboard."));
+      }
+    };
+
+    void loadDashboard();
+  }, []);
+
+  const handleViewSubmission = (submission: RecentSubmission) => {
+    router.push(
+      `/professor/courses/details?courseId=${submission.course_id}&week=${submission.week}`,
     );
-
-    const week = matchedAssignment?.week || 1;
-
-    return { courseId, week };
-  };
-
-  const handleViewSubmission = (submission: any) => {
-    const { courseId, week } = getWeekAndCourseIdFromSubmission(submission);
-    router.push(`/professor/courses/details?courseId=${courseId}&week=${week}`);
   };
 
   return (
@@ -68,16 +106,20 @@ export default function ProfessorDashboard() {
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
           <p className="text-sm text-gray-500">Mata Kuliah</p>
           <p className="text-5xl font-semibold text-[#0D542B] mt-2">
-            {mockProfessorCourses.length}
+            {stats.courses}
           </p>
         </div>
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
           <p className="text-sm text-gray-500">Mahasiswa Aktif</p>
-          <p className="text-5xl font-semibold text-[#0D542B] mt-2">87</p>
+          <p className="text-5xl font-semibold text-[#0D542B] mt-2">
+            {stats.active_students}
+          </p>
         </div>
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
           <p className="text-sm text-gray-500">Tugas Pending</p>
-          <p className="text-5xl font-semibold text-[#0D542B] mt-2">12</p>
+          <p className="text-5xl font-semibold text-[#0D542B] mt-2">
+            {stats.pending_assignments}
+          </p>
         </div>
       </div>
 
@@ -112,7 +154,7 @@ export default function ProfessorDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {mockRecentSubmissions.map((submission) => (
+                {recentSubmissions.map((submission) => (
                   <tr
                     key={submission.id}
                     className="hover:bg-gray-50 transition-colors"
@@ -120,7 +162,7 @@ export default function ProfessorDashboard() {
                     <td className="p-5">
                       <div>
                         <p className="font-semibold text-gray-900">
-                          {submission.studentName}
+                          {submission.student_name}
                         </p>
                         <p className="text-xs text-gray-500 mt-0.5">
                           {submission.nim}
@@ -131,11 +173,11 @@ export default function ProfessorDashboard() {
                       </div>
                     </td>
                     <td className="p-5 text-gray-900 font-medium">
-                      {submission.assignmentTitle}
+                      {submission.assignment_title}
                     </td>
                     <td className="p-5 text-gray-600">{submission.course}</td>
                     <td className="p-5 text-gray-500 text-sm">
-                      {submission.submittedAt}
+                      {formatSubmittedAt(submission.submitted_at)}
                     </td>
                     <td className="p-5 text-center">
                       <button
