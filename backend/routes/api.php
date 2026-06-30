@@ -10,6 +10,7 @@ use App\Http\Controllers\Professor\ProfessorSubmissionController;
 use App\Http\Controllers\Professor\MaterialController;
 use App\Http\Controllers\Professor\StudentController;
 use App\Http\Controllers\Professor\ProfessorDashboardController;
+use App\Http\Controllers\Api\Student\StudentCourseController;
 use App\Http\Controllers\Api\Student\CourseWeekController;
 use App\Http\Controllers\Api\Student\MaterialAccessController;
 use App\Http\Controllers\Api\Student\StudentSubmissionController;
@@ -79,6 +80,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::prefix('student')->group(function () {
+        Route::get('/courses', [StudentCourseController::class, 'index']);
+        Route::post('/courses/{course}/enrollment', [StudentCourseController::class, 'store']);
+        Route::put('/courses/{course}/enrollment', [StudentCourseController::class, 'update']);
+        Route::patch('/courses/{course}/enrollment', [StudentCourseController::class, 'update']);
+        Route::delete('/courses/{course}/enrollment', [StudentCourseController::class, 'destroy']);
         Route::get('/courses/{course}/weeks', [CourseWeekController::class, 'index']);
         Route::get('/courses/{course}/weeks/{week}', [CourseWeekController::class, 'show']);
         Route::get('/materials/{material}/open', [MaterialAccessController::class, 'open'])
