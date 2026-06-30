@@ -12,6 +12,7 @@ use App\Http\Controllers\Professor\StudentController;
 use App\Http\Controllers\Professor\ProfessorDashboardController;
 use App\Http\Controllers\Api\Student\CourseWeekController;
 use App\Http\Controllers\Api\Student\MaterialAccessController;
+use App\Http\Controllers\Api\Student\StudentSubmissionController;
 
 // ==================== AUTH PUBLIC ====================
 Route::post('/register', [RegisterController::class, 'register']);
@@ -82,6 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/courses/{course}/weeks/{week}', [CourseWeekController::class, 'show']);
         Route::get('/materials/{material}/open', [MaterialAccessController::class, 'open'])
             ->name('student.materials.open');
+        Route::post('/assignments/{assignment}/submission', [StudentSubmissionController::class, 'store']);
     });
 
     Route::prefix('professor/students')->group(function () {
