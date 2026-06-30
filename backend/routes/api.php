@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Student\StudentCourseController;
 use App\Http\Controllers\Api\Student\CourseWeekController;
 use App\Http\Controllers\Api\Student\MaterialAccessController;
 use App\Http\Controllers\Api\Student\StudentSubmissionController;
+use App\Http\Controllers\Api\Student\StudentDashboardController;
 
 // ==================== AUTH PUBLIC ====================
 Route::post('/register', [RegisterController::class, 'register']);
@@ -80,6 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::prefix('student')->group(function () {
+        Route::get('/dashboard', [StudentDashboardController::class, 'index']);
         Route::get('/courses', [StudentCourseController::class, 'index']);
         Route::post('/courses/{course}/enrollment', [StudentCourseController::class, 'store']);
         Route::put('/courses/{course}/enrollment', [StudentCourseController::class, 'update']);
