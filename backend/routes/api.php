@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Student\CourseWeekController;
 use App\Http\Controllers\Api\Student\MaterialAccessController;
 use App\Http\Controllers\Api\Student\StudentSubmissionController;
 use App\Http\Controllers\Api\Student\StudentDashboardController;
+use App\Http\Controllers\Api\Student\AssignmentController;
 
 // ==================== AUTH PUBLIC ====================
 Route::post('/register', [RegisterController::class, 'register']);
@@ -92,6 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/materials/{material}/open', [MaterialAccessController::class, 'open'])
             ->name('student.materials.open');
         Route::post('/assignments/{assignment}/submission', [StudentSubmissionController::class, 'store']);
+        Route::get('/assignments', [AssignmentController::class, 'index']);
     });
 
     Route::prefix('professor/students')->group(function () {

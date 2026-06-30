@@ -1,23 +1,100 @@
 'use client';
 
-import { mockAssignments } from '@/data/mock/mock-data';
+import { useState, useEffect } from 'react';
+import { api, getErrorMessage } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 
+interface AssignmentItem {
+  id: number;
+  title: string;
+  course: string;
+  courseId: number;
+  week: number;
+  dueDate: string;
+  daysLeft: number;
+  status: 'pending' | 'submitted' | 'graded';
+  submittedDate?: string | null;
+  score?: number | null;
+}
+
 export default function StudentAssignments() {
   const router = useRouter();
 
-  const pending = mockAssignments.filter(a => a.status === "pending");
-  const submitted = mockAssignments.filter(a => a.status === "submitted" || a.status === "graded");
+  const [pending, setPending] = useState<AssignmentItem[]>([]);
+  const [submitted, setSubmitted] = useState<AssignmentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await api.get<{ pending: AssignmentItem[]; submitted: AssignmentItem[] }>(
+          '/api/student/assignments'
+        );
+
+        setPending(res.data.pending || []);
+        setSubmitted(res.data.submitted || []);
+      } catch (err) {
+        setError(getErrorMessage(err, 'Gagal memuat data tugas.'));
+        setPending([]);
+        setSubmitted([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAssignments();
+  }, []);
 
   const handleSubmitNow = (courseId: number, week: number) => {
     router.push(`/student/courses/details/week?courseId=${courseId}&week=${week}`);
   };
 
+  // ==================== LOADING STATE ====================
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div 
+          className="rounded-3xl p-8 text-white"
+          style={{ background: 'linear-gradient(135deg, #0F172B 0%, #0D542B 50%, #004F3B 100%)' }}
+        >
+          <h1 className="text-4xl font-bold">Assignments</h1>
+          <p className="text-emerald-200 mt-2">Kelola semua tugasmu di sini</p>
+        </div>
+        <div className="flex justify-center py-12">
+          <p className="text-gray-500">Memuat tugas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ==================== ERROR STATE ====================
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div 
+          className="rounded-3xl p-8 text-white"
+          style={{ background: 'linear-gradient(135deg, #0F172B 0%, #0D542B 50%, #004F3B 100%)' }}
+        >
+          <h1 className="text-4xl font-bold">Assignments</h1>
+          <p className="text-emerald-200 mt-2">Kelola semua tugasmu di sini</p>
+        </div>
+        <div className="p-6 bg-red-50 text-red-600 rounded-2xl border border-red-200">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  // ==================== MAIN UI (TIDAK DIUBAH) ====================
   return (
     <div className="space-y-8">
-      {/* Header Gradient */}
+      {/* Header Gradient - EXACT SAME */}
       <div 
         className="rounded-3xl p-8 text-white"
         style={{
@@ -28,7 +105,7 @@ export default function StudentAssignments() {
         <p className="text-emerald-200 mt-2">Kelola semua tugasmu di sini</p>
       </div>
 
-      {/* Pending Assignments */}
+      {/* Pending Assignments - EXACT SAME */}
       <div>
         <h3 className="text-2xl font-semibold text-gray-900 mb-6">
           Pending ({pending.length})
@@ -43,11 +120,17 @@ export default function StudentAssignments() {
                     <p className="text-gray-500">{assignment.course}</p>
                   </div>
                   <span className={`px-4 py-2 rounded-2xl text-sm font-medium ${
-                    assignment.daysLeft <= 3 
-                      ? "bg-red-100 text-red-700" 
-                      : "bg-amber-100 text-amber-700"
+                    assignment.daysLeft < 0
+                      ? "bg-red-600 text-white shadow-sm" // Styling khusus untuk tugas yang sudah lewat tenggat
+                      : assignment.daysLeft <= 3 
+                        ? "bg-red-100 text-red-700" 
+                        : "bg-amber-100 text-amber-700"
                   }`}>
-                    {assignment.daysLeft} hari lagi
+                    {assignment.daysLeft < 0 
+                      ? `Terlambat ${Math.abs(assignment.daysLeft)} hari` 
+                      : assignment.daysLeft === 0 
+                        ? "Tenggat hari ini"
+                        : `${assignment.daysLeft} hari lagi`}
                   </span>
                 </div>
 
@@ -68,7 +151,7 @@ export default function StudentAssignments() {
         </div>
       </div>
 
-      {/* Submitted Assignments */}
+      {/* Submitted Assignments - EXACT SAME */}
       <div>
         <h3 className="text-2xl font-semibold text-gray-900 mb-6">
           Submitted ({submitted.length})
