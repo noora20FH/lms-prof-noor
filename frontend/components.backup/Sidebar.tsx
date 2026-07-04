@@ -1,31 +1,23 @@
-"use client";
+'use client';
 
-import { useTranslations } from "next-intl";
-import {
-  LogOut,
-  LayoutDashboard,
-  BookOpen,
-  Users,
-  FileText,
-  X,
-} from "lucide-react";
-
-import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { LogOut, LayoutDashboard, BookOpen, Users, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navItems = {
   professor: [
-    { labelKey: "dashboard", href: "/professor/dashboard", icon: LayoutDashboard },
-    { labelKey: "courses", href: "/professor/courses", icon: BookOpen },
-    { labelKey: "materials", href: "/professor/materials", icon: FileText },
-    { labelKey: "students", href: "/professor/students", icon: Users },
+    { label: "Dashboard", href: "/professor/dashboard", icon: LayoutDashboard },
+    { label: "Mata Kuliah", href: "/professor/courses", icon: BookOpen },
+    { label: "Materi", href: "/professor/materials", icon: FileText },
+    { label: "Mahasiswa", href: "/professor/students", icon: Users },
+    
   ],
   student: [
-    { labelKey: "dashboard", href: "/student/dashboard", icon: LayoutDashboard },
-    { labelKey: "courses", href: "/student/courses", icon: BookOpen },
-    { labelKey: "assignments", href: "/student/assignments", icon: FileText },
+    { label: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
+    { label: "Mata Kuliah", href: "/student/courses", icon: BookOpen },
+    { label: "Tugas Saya", href: "/student/assignments", icon: FileText },
   ],
 } as const;
 
@@ -43,17 +35,11 @@ export default function Sidebar({
   onToggle,
 }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const t = useTranslations("Sidebar");
   const items = navItems[role];
-
-  const handleLogout = () => {
-    localStorage.clear();
-    router.replace("/login");
-  };
 
   return (
     <>
+      {/* Overlay Mobile */}
       {isOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/70 z-[100] backdrop-blur-sm"
@@ -61,21 +47,22 @@ export default function Sidebar({
         />
       )}
 
+      {/* Sidebar Drawer - FULL WIDTH di Mobile */}
       <div
         className={cn(
           "fixed lg:static inset-y-0 left-0 bg-[#0F172B] text-white h-dvh flex flex-col",
           "border-r border-white/10 transition-transform duration-300 z-[110] shadow-2xl lg:shadow-none",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-          "w-full lg:w-72"
+          "w-full lg:w-72"          // ← FULL WIDTH di mobile
         )}
       >
+        {/* HEADER */}
         <div className="p-6 border-b border-white/10 flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             className="lg:hidden text-white hover:bg-white/10"
             onClick={onToggle}
-            aria-label={t("closeMenu")}
           >
             <X className="w-6 h-6" />
           </Button>
@@ -85,17 +72,15 @@ export default function Sidebar({
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">LMS</h1>
-            <p className="text-xs text-emerald-400 -mt-1">
-              Prof. M. Noor Hidayat
-            </p>
+            <p className="text-xs text-emerald-400 -mt-1">Prof. M. Noor Hidayat</p>
           </div>
         </div>
 
+        {/* NAV */}
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
           {items.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
-
             return (
               <Link
                 key={item.href}
@@ -108,21 +93,24 @@ export default function Sidebar({
                 }`}
               >
                 <Icon className="w-5 h-5" />
-                <span>{t(item.labelKey)}</span>
+                <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-white/10 mt-auto space-y-3">
-          <LanguageSwitcher className="w-full justify-center" />
+        {/* LOGOUT */}
+        <div className="p-4 border-t border-white/10 mt-auto">
           <Button
             variant="ghost"
             className="w-full justify-start text-white/80 hover:text-white hover:bg-white/10 h-12 text-base"
-            onClick={handleLogout}
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = "/login";
+            }}
           >
             <LogOut className="w-5 h-5 mr-3" />
-            {t("logout")}
+            Keluar
           </Button>
         </div>
       </div>
