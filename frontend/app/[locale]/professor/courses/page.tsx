@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { BookOpen, Pencil, Plus, Users } from "lucide-react";
+import { BookOpen, Pencil, Plus, Trash2, Users } from "lucide-react";
 import AddCourseModal, {
   type NewCoursePayload,
 } from "@/components/professor/AddCourseModal";
@@ -60,6 +60,7 @@ export default function ProfessorCourses() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAddCourseModalOpen, setIsAddCourseModalOpen] = useState(false);
+  const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] =
     useState<EditableCourseData | null>(null);
 
@@ -145,6 +146,32 @@ export default function ProfessorCourses() {
     }
   };
 
+  const handleDeleteCourse = async (course: ProfessorCourse) => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to delete "${course.title}"? This action cannot be undone.`
+    );
+
+    if (!isConfirmed) return;
+
+    try {
+      setDeletingCourseId(course.id);
+      await csrf();
+      await api.delete(`/api/professor/courses/${course.id}`);
+
+      setCourses((previousCourses) =>
+        previousCourses.filter((item) => item.id !== course.id)
+      );
+
+      if (selectedCourse?.id === course.id) {
+        setSelectedCourse(null);
+      }
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Failed to delete the course."));
+    } finally {
+      setDeletingCourseId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div
@@ -216,16 +243,31 @@ export default function ProfessorCourses() {
                       <BookOpen className="h-5 w-5" />
                     </div>
 
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openEditCourseModal(course)}
-                      className="shrink-0"
-                    >
-                      <Pencil className="mr-1 h-4 w-4" />
-                      {t("edit")}
-                    </Button>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openEditCourseModal(course)}
+                        disabled={deletingCourseId === course.id}
+                      >
+                        <Pencil className="mr-1 h-4 w-4" />
+                        {t("edit")}
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void handleDeleteCourse(course)}
+                        disabled={deletingCourseId === course.id}
+                        aria-label="Delete course"
+                        title="Delete course"
+                        className="h-9 w-9 p-0 text-red-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   <CardTitle className="text-xl">{course.title}</CardTitle>

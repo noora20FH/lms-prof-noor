@@ -49,7 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/courses/{course}', [ProfessorCourseController::class, 'show']);
         Route::put('/courses/{course}', [ProfessorCourseController::class, 'update']);
         Route::patch('/courses/{course}', [ProfessorCourseController::class, 'update']);
-        Route::delete('/courses/{course}', [ProfessorCourseController::class, 'destroy']);
+        Route::delete(
+            '/courses/{course}',
+            [ProfessorCourseController::class, 'destroy']
+        );
         Route::get('/courses/{course}/details', [ProfessorCourseController::class, 'details']);
 
         // Assignments per week
@@ -106,5 +109,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{enrollmentId}/approve', [StudentController::class, 'approve']);
         Route::delete('/{enrollmentId}', [StudentController::class, 'destroy']);
     });
-
 });

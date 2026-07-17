@@ -214,10 +214,15 @@ class ProfessorCourseController extends Controller
         $this->ensureProfessor($request);
         $this->ensureCourseOwner($course, $request->user()->id);
 
-        $course->delete();
+        $deletedCourseId = (string) $course->id;
+
+        DB::transaction(function () use ($course) {
+            $course->delete();
+        });
 
         return response()->json([
             'message' => 'Mata kuliah berhasil dihapus.',
+            'course_id' => $deletedCourseId,
         ]);
     }
 
