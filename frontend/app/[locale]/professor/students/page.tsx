@@ -24,7 +24,7 @@ export type ProfessorStudent = {
   enrollmentId: number;
   name: string;
   nim: string;
-  className: string | null;
+  class_: string | null;
   email: string;
   status: StudentStatus;
   course: string;
@@ -64,7 +64,7 @@ export default function ProfessorStudents() {
         enrollmentId: Number(student.enrollment_id),
         name: student.name,
         nim: student.nim ?? '',
-        className: student.class_ ?? null,
+        class_: student.class_ ?? null,
         email: student.email,
         status: student.status,
         course: student.course,
@@ -278,10 +278,11 @@ export default function ProfessorStudents() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0D542B]/10 font-medium text-[#0D542B]">
                     {getInitialName(student.name)}
                   </div>
+                  
                   <div>
                     <p className="font-semibold text-gray-900">{student.name}</p>
                     <p className="text-sm text-gray-500">
-                      {student.nim} • {student.course}
+                      {student.nim}  •  {student.class_}  •  {student.email}  •  {student.course}
                     </p>
                   </div>
                 </div>
@@ -306,9 +307,6 @@ export default function ProfessorStudents() {
                       {t('approve')}
                     </Button>
                   )}
-                  <Button size="sm" variant="outline">
-                    {t('detail')}
-                  </Button>
                 </div>
               </div>
             ))}
