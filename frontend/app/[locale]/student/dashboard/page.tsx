@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "@/i18n/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { api } from "@/lib/api";
+import { api, getErrorMessage } from "@/lib/api";
 
 interface DashboardCourse {
   id: number;
@@ -25,6 +25,11 @@ interface DashboardAssignment {
   hasDeadline: boolean;
 }
 
+interface DashboardResponse {
+  courses?: DashboardCourse[];
+  pending?: DashboardAssignment[];
+}
+
 export default function StudentDashboard() {
   const t = useTranslations("StudentDashboard");
   const router = useRouter();
@@ -33,24 +38,56 @@ export default function StudentDashboard() {
   const [courses, setCourses] = useState<DashboardCourse[]>([]);
   const [pending, setPending] = useState<DashboardAssignment[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
+    if (authLoading) return;
+
+    if (!user) {
+      setDataLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
     const fetchDashboardData = async () => {
       try {
-        const response = await api.get("/api/student/dashboard");
-        setCourses(response.data.courses);
-        setPending(response.data.pending);
-      } catch (error) {
-        console.error("Failed to fetch dashboard data", error);
+        setDataLoading(true);
+        setError("");
+
+        const response = await api.get<DashboardResponse>(
+          "/api/student/dashboard"
+        );
+
+        if (cancelled) return;
+
+        setCourses(response.data.courses ?? []);
+        setPending(response.data.pending ?? []);
+      } catch (requestError) {
+        if (cancelled) return;
+
+        console.error("Failed to fetch dashboard data", requestError);
+        setCourses([]);
+        setPending([]);
+        setError(
+          getErrorMessage(
+            requestError,
+            "Dashboard data could not be loaded."
+          )
+        );
       } finally {
-        setDataLoading(false);
+        if (!cancelled) {
+          setDataLoading(false);
+        }
       }
     };
 
-    if (user) {
-      void fetchDashboardData();
-    }
-  }, [user]);
+    void fetchDashboardData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user]);
 
   const handleCourseClick = (courseId: number) => {
     router.push(`/student/courses/details?courseId=${courseId}`);
@@ -64,7 +101,7 @@ export default function StudentDashboard() {
 
   if (authLoading || dataLoading) {
     return (
-      <div className="flex h-full items-center justify-center p-8 text-center text-white">
+      <div className="flex h-full items-center justify-center p-8 text-center text-gray-600">
         {t("loading")}
       </div>
     );
@@ -86,13 +123,22 @@ export default function StudentDashboard() {
         </p>
       </div>
 
+      {error && (
+        <div
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+        >
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <h2 className="mb-4 text-xl font-semibold">
             {t("enrolledClasses")}
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            {courses.length === 0 ? (
+            {!error && courses.length === 0 ? (
               <p className="text-gray-500">{t("noCourses")}</p>
             ) : (
               courses.map((course) => (
@@ -127,7 +173,7 @@ export default function StudentDashboard() {
             {t("pendingAssignments", { count: pending.length })}
           </h2>
           <div className="space-y-4">
-            {pending.length === 0 ? (
+            {!error && pending.length === 0 ? (
               <p className="rounded-lg border p-4 text-center text-sm text-gray-500">
                 {t("noPendingAssignments")}
               </p>
@@ -136,11 +182,9 @@ export default function StudentDashboard() {
                 <Card
                   key={assignment.id}
                   className={`cursor-pointer border-0 shadow-sm transition-all hover:shadow-md ${
-                    !assignment.hasDeadline
-                      ? ""
-                      : assignment.isOverdue
-                        ? "border-l-4 border-l-red-600"
-                        : ""
+                    assignment.hasDeadline && assignment.isOverdue
+                      ? "border-l-4 border-l-red-600"
+                      : ""
                   }`}
                   onClick={() =>
                     handleAssignmentClick(assignment.courseId, assignment.week)
