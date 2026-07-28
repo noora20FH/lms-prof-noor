@@ -37,7 +37,7 @@ type MaterialData = {
   id: number;
   title: string;
   type: MaterialType;
-  access_url: string;
+  content_url: string | null;
 };
 
 type SubmissionData = {
@@ -343,15 +343,25 @@ function StudentCourseWeekDetailContent() {
                   </div>
                 </div>
 
-                <Button asChild className="bg-gradient-to-r from-[#0D542B] to-[#004F3B]">
-                  <a
-                    href={material.access_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                {material.content_url && isValidHttpUrl(material.content_url) ? (
+                  <Button
+                    asChild
+                    className="bg-gradient-to-r from-[#0D542B] to-[#004F3B]"
                   >
-                    {t('open')} <ExternalLink className="ml-2 h-4 w-4" />
-                  </a>
-                </Button>
+                    <a
+                      href={material.content_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {t('open')}
+                      <ExternalLink className="ml-2 h-4 w-4" />
+                    </a>
+                  </Button>
+                ) : (
+                  <Button disabled>
+                    Link tidak tersedia
+                  </Button>
+                )}
               </div>
             ))
           ) : (

@@ -7,6 +7,7 @@ use App\Models\Course;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class CourseWeekController extends Controller
 {
@@ -112,7 +113,7 @@ class CourseWeekController extends Controller
                     'id' => (int) $material->id,
                     'title' => $material->title,
                     'type' => $material->type,
-                    'access_url' => route('student.materials.open', ['material' => $material->id]),
+                    'content_url' => $this->resolveMaterialContentUrl($material->content_url),
                 ])->values(),
                 'assignments' => $courseWeek->assignments->map(function ($assignment) {
                     $submission = $assignment->submissions->first();
@@ -139,6 +140,21 @@ class CourseWeekController extends Controller
                 })->values(),
             ],
         ]);
+    }
+
+    private function resolveMaterialContentUrl(?string $contentUrl): ?string
+    {
+        $contentUrl = trim((string) $contentUrl);
+
+        if ($contentUrl === '') {
+            return null;
+        }
+
+        if (preg_match('#^https?://#i', $contentUrl) === 1) {
+            return $contentUrl;
+        }
+
+        return Storage::disk('public')->url($contentUrl);
     }
 
     private function ensureStudentIsEnrolled(Course $course, int $studentId): void
