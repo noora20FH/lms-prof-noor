@@ -22,7 +22,8 @@
     "students": "学生",
     "assignments": "我的作业",
     "logout": "退出登录",
-    "closeMenu": "关闭菜单"
+    "closeMenu": "关闭菜单",
+    "profile": "我的个人资料"
   },
   "Auth": {
     "login": {

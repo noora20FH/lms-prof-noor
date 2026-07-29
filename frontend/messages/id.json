@@ -21,7 +21,8 @@
     "students": "Mahasiswa",
     "assignments": "Tugas Saya",
     "logout": "Keluar",
-    "closeMenu": "Tutup menu"
+    "closeMenu": "Tutup menu",
+    "profile": "Profil Saya"
   },
   "Auth": {
     "login": {

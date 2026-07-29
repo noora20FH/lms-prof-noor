@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Student\MaterialAccessController;
 use App\Http\Controllers\Api\Student\StudentSubmissionController;
 use App\Http\Controllers\Api\Student\StudentDashboardController;
 use App\Http\Controllers\Api\Student\AssignmentController;
+use App\Http\Controllers\Api\ProfileController;
 
 // ==================== AUTH PUBLIC ====================
 Route::post('/register', [RegisterController::class, 'register']);
@@ -38,6 +39,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
+
+    // Shared profile settings for professor and student.
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::put('/profile', [ProfileController::class, 'update']);
+    Route::patch('/profile', [ProfileController::class, 'update']);
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
 
     Route::prefix('professor')->group(function () {
         // Dashboard database summary

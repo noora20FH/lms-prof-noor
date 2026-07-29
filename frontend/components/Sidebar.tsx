@@ -7,6 +7,7 @@ import {
   BookOpen,
   Users,
   FileText,
+  UserRound,
   X,
 } from "lucide-react";
 
@@ -17,13 +18,21 @@ import { cn } from "@/lib/utils";
 
 const navItems = {
   professor: [
-    { labelKey: "dashboard", href: "/professor/dashboard", icon: LayoutDashboard },
+    {
+      labelKey: "dashboard",
+      href: "/professor/dashboard",
+      icon: LayoutDashboard,
+    },
     { labelKey: "courses", href: "/professor/courses", icon: BookOpen },
     { labelKey: "materials", href: "/professor/materials", icon: FileText },
     { labelKey: "students", href: "/professor/students", icon: Users },
   ],
   student: [
-    { labelKey: "dashboard", href: "/student/dashboard", icon: LayoutDashboard },
+    {
+      labelKey: "dashboard",
+      href: "/student/dashboard",
+      icon: LayoutDashboard,
+    },
     { labelKey: "courses", href: "/student/courses", icon: BookOpen },
     { labelKey: "assignments", href: "/student/assignments", icon: FileText },
   ],
@@ -46,6 +55,11 @@ export default function Sidebar({
   const router = useRouter();
   const t = useTranslations("Sidebar");
   const items = navItems[role];
+  const profileHref =
+    role === "professor" ? "/professor/profile" : "/student/profile";
+
+  const isProfileActive =
+    pathname === profileHref || pathname.startsWith(`${profileHref}/`);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -66,7 +80,7 @@ export default function Sidebar({
           "fixed lg:static inset-y-0 left-0 bg-[#0F172B] text-white h-dvh flex flex-col",
           "border-r border-white/10 transition-transform duration-300 z-[110] shadow-2xl lg:shadow-none",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-          "w-full lg:w-72"
+          "w-full lg:w-72",
         )}
       >
         <div className="p-6 border-b border-white/10 flex items-center gap-3">
@@ -115,6 +129,27 @@ export default function Sidebar({
         </nav>
 
         <div className="p-4 border-t border-white/10 mt-auto space-y-3">
+          <Link
+            href={profileHref}
+            onClick={() => window.innerWidth < 1024 && onToggle()}
+            aria-current={isProfileActive ? "page" : undefined}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-2xl px-3 py-3",
+              "transition-colors",
+              isProfileActive
+                ? "bg-[#0D542B] text-white"
+                : "text-white/80 hover:bg-white/10 hover:text-white",
+            )}
+          >
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/10">
+              <UserRound className="h-5 w-5" />
+            </div>
+
+            <div className="min-w-0 text-left">
+              <p className="truncate text-sm font-semibold">{userName}</p>
+              <p className="text-xs text-white/60">{t("profile")}</p>
+            </div>
+          </Link>
           <LanguageSwitcher className="w-full justify-center" />
           <Button
             variant="ghost"

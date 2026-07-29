@@ -21,7 +21,8 @@
     "students": "Students",
     "assignments": "My Assignments",
     "logout": "Log out",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "profile": "My Profile"
   },
   "Auth": {
     "login": {
