@@ -16,7 +16,6 @@ use App\Http\Controllers\Api\Student\MaterialAccessController;
 use App\Http\Controllers\Api\Student\StudentSubmissionController;
 use App\Http\Controllers\Api\Student\StudentDashboardController;
 use App\Http\Controllers\Api\Student\AssignmentController;
-use App\Http\Controllers\Api\ProfileController;
 
 // ==================== AUTH PUBLIC ====================
 Route::post('/register', [RegisterController::class, 'register']);
@@ -39,12 +38,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
-
-    // Shared profile settings for professor and student.
-    Route::get('/profile', [ProfileController::class, 'show']);
-    Route::put('/profile', [ProfileController::class, 'update']);
-    Route::patch('/profile', [ProfileController::class, 'update']);
-    Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
 
     Route::prefix('professor')->group(function () {
         // Dashboard database summary
@@ -109,11 +102,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('professor/students')->group(function () {
         Route::get('/', [StudentController::class, 'index']);
         Route::get('/available', [StudentController::class, 'availableStudents']);
+        Route::get('/trashed', [StudentController::class, 'trashed']);
         Route::post('/enroll', [StudentController::class, 'enroll']);
         Route::get('/{enrollmentId}', [StudentController::class, 'show']);
         Route::put('/{enrollmentId}', [StudentController::class, 'update']);
         Route::patch('/{enrollmentId}', [StudentController::class, 'update']);
         Route::post('/{enrollmentId}/approve', [StudentController::class, 'approve']);
+        Route::patch('/{enrollmentId}/restore', [StudentController::class, 'restore']);
         Route::delete('/{enrollmentId}', [StudentController::class, 'destroy']);
     });
 });

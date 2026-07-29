@@ -40,6 +40,33 @@ class StudentController extends Controller
     }
 
     /**
+     * Menampilkan enrollment mahasiswa yang sudah dihapus secara soft delete.
+     */
+    public function trashed(Request $request)
+    {
+        $this->ensureProfessor($request);
+
+        $enrollments = CourseEnrollment::onlyTrashed()
+            ->with([
+                'student:id,name,nim,class_,email',
+                'course:id,professor_id,title',
+            ])
+            ->whereHas('course', function ($query) use ($request) {
+                $query->where('professor_id', $request->user()->id);
+            })
+            ->latest('deleted_at')
+            ->get()
+            ->filter(fn (CourseEnrollment $enrollment) => $enrollment->student && $enrollment->course)
+            ->map(fn (CourseEnrollment $enrollment) => $this->enrollmentResponse($enrollment))
+            ->values();
+
+        return response()->json([
+            'students' => $enrollments,
+            'total' => $enrollments->count(),
+        ]);
+    }
+
+    /**
      * Menampilkan satu data enrollment milik professor.
      */
     public function show(Request $request, int $enrollmentId)
@@ -221,6 +248,36 @@ class StudentController extends Controller
     }
 
     /**
+     * Mengembalikan enrollment mahasiswa yang sudah dihapus.
+     */
+    public function restore(Request $request, int $enrollmentId)
+    {
+        $this->ensureProfessor($request);
+
+        $enrollment = $this->ownedTrashedEnrollment($request, $enrollmentId);
+
+        $activeEnrollmentCount = CourseEnrollment::query()
+            ->where('course_id', $enrollment->course_id)
+            ->count();
+        $capacity = (int) ($enrollment->course->capacity ?? 0);
+
+        if ($capacity > 0 && $activeEnrollmentCount >= $capacity) {
+            abort(422, 'Data tidak dapat dipulihkan karena kapasitas mata kuliah sudah penuh.');
+        }
+
+        $enrollment->restore();
+        $enrollment->refresh()->load([
+            'student:id,name,nim,class_,email',
+            'course:id,professor_id,title',
+        ]);
+
+        return response()->json([
+            'message' => 'Data mahasiswa berhasil dipulihkan ke mata kuliah.',
+            'student' => $this->enrollmentResponse($enrollment),
+        ]);
+    }
+
+    /**
      * Alias kompatibilitas dengan nama method lama.
      */
     public function reject(Request $request, int $enrollmentId)
@@ -250,6 +307,20 @@ class StudentController extends Controller
             ->firstOrFail();
     }
 
+    private function ownedTrashedEnrollment(Request $request, int $enrollmentId): CourseEnrollment
+    {
+        return CourseEnrollment::onlyTrashed()
+            ->with([
+                'student:id,name,nim,class_,email',
+                'course:id,professor_id,title,capacity',
+            ])
+            ->whereKey($enrollmentId)
+            ->whereHas('course', function ($query) use ($request) {
+                $query->where('professor_id', $request->user()->id);
+            })
+            ->firstOrFail();
+    }
+
     private function enrollmentResponse(CourseEnrollment $enrollment): array
     {
         return [
@@ -264,6 +335,7 @@ class StudentController extends Controller
             'courseId' => $enrollment->course_id,
             'created_at' => $enrollment->created_at,
             'updated_at' => $enrollment->updated_at,
+            'deleted_at' => $enrollment->deleted_at,
         ];
     }
 
