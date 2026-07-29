@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useAuthUser } from '@/hooks/useAuthUser';
 
 export default function ProfessorLayout({
   children,
@@ -13,19 +14,19 @@ export default function ProfessorLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const professorUser = {
-    name: "Prof. Noor",
-    role: "professor" as const,
-  };
-
+  const { user, loading } = useAuthUser();
+    const displayName = loading
+    ? "Memuat..."
+    : user?.name ?? "Professor";
   return (
     <div className="flex h-dvh bg-gray-50 overflow-hidden">
       <Sidebar
-        role={professorUser.role}
-        userName={professorUser.name}
+        role="professor"
+        userName={displayName}
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
+
 
       <div className="flex-1 flex flex-col min-h-0">   {/* ← TAMBAHKAN min-h-0 */}
         <div className="lg:hidden flex items-center justify-between px-4 py-4 bg-white border-b shadow-sm z-50">
