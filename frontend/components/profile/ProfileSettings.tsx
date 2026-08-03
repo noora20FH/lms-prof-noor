@@ -112,7 +112,8 @@ const copyByLocale: Record<string, Copy> = {
     passwordError: "Password gagal diperbarui.",
     professor: "Professor",
     student: "Mahasiswa",
-    securityNote: "Password saat ini wajib dimasukkan untuk melindungi akun Anda.",
+    securityNote:
+      "Password saat ini wajib dimasukkan untuk melindungi akun Anda.",
   },
   en: {
     title: "My Profile",
@@ -245,19 +246,32 @@ export default function ProfileSettings() {
     setPasswordForm((current) => ({ ...current, [field]: value }));
   };
 
-  const handleProfileSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleProfileSubmit = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
+
+    if (!profile) {
+      setProfileError(copy.loadError);
+      return;
+    }
+
     setProfileSaving(true);
     setProfileError("");
 
     try {
+      const isStudent = profile.role === "student";
+
       const payload = {
         ...profileForm,
-        nim: profile.role === "student" ? profileForm.nim : null,
-        class_: profile.role === "student" ? profileForm.class_ : null,
+        nim: isStudent ? profileForm.nim : null,
+        class_: isStudent ? profileForm.class_ : null,
       };
 
-      const { data } = await api.patch<ProfileResponse>("/api/profile", payload);
+      const { data } = await api.patch<ProfileResponse>(
+        "/api/profile",
+        payload,
+      );
 
       setProfile(data.profile);
       setProfileForm(profileToForm(data.profile));
@@ -270,7 +284,7 @@ export default function ProfileSettings() {
   };
 
   const handlePasswordSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
+    event: React.FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
     setPasswordSaving(true);
@@ -279,7 +293,7 @@ export default function ProfileSettings() {
     try {
       const { data } = await api.put<{ message?: string }>(
         "/api/profile/password",
-        passwordForm
+        passwordForm,
       );
 
       setPasswordForm(emptyPasswordForm);
@@ -307,7 +321,8 @@ export default function ProfileSettings() {
     );
   }
 
-  const roleLabel = profile.role === "professor" ? copy.professor : copy.student;
+  const roleLabel =
+    profile.role === "professor" ? copy.professor : copy.student;
 
   return (
     <div className="space-y-8">
@@ -514,9 +529,7 @@ export default function ProfileSettings() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">
-                  {copy.confirmPassword}
-                </Label>
+                <Label htmlFor="confirm-password">{copy.confirmPassword}</Label>
                 <Input
                   id="confirm-password"
                   type="password"
@@ -525,7 +538,7 @@ export default function ProfileSettings() {
                   onChange={(event) =>
                     updatePasswordField(
                       "password_confirmation",
-                      event.target.value
+                      event.target.value,
                     )
                   }
                   required
