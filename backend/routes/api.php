@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Student\MaterialAccessController;
 use App\Http\Controllers\Api\Student\StudentSubmissionController;
 use App\Http\Controllers\Api\Student\StudentDashboardController;
 use App\Http\Controllers\Api\Student\AssignmentController;
+use App\Http\Controllers\Api\ProfileController;
 
 // ==================== AUTH PUBLIC ====================
 Route::post('/register', [RegisterController::class, 'register']);
@@ -26,6 +27,16 @@ Route::post('/login', [AuthenticatedSessionController::class, 'store'])
 // ==================== AUTH PROTECTED ====================
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
+        return $request->user()->only([
+            'id',
+            'name',
+            'email',
+            'nim',
+            'class_',
+            'role',
+        ]);
+    });
+    Route::get('/profile', function (Request $request) {
         return $request->user()->only([
             'id',
             'name',

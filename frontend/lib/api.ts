@@ -1,6 +1,12 @@
 import axios, { AxiosError } from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_URL) {
+  throw new Error(
+    "NEXT_PUBLIC_API_URL belum dikonfigurasi."
+  );
+}
 
 function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
