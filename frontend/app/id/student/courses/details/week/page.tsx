@@ -3,8 +3,7 @@
 import axios from 'axios';
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
+import { useRouter } from "next/navigation";
 import { Button } from '@/components/ui/button';
 import { api, csrf, getErrorMessage } from '@/lib/api';
 import {
@@ -78,16 +77,10 @@ type SubmitAssignmentPayload = {
 
 type AssignmentAvailability = 'open' | 'not_started' | 'closed';
 
-function getIntlLocale(locale: string) {
-  if (locale === 'zh') return 'zh-CN';
-  if (locale === 'en') return 'en-US';
-  return 'id-ID';
-}
-
-function formatDate(value: string | null, locale: string): string {
+function formatDate(value: string | null): string {
   if (!value) return '-';
 
-  return new Intl.DateTimeFormat(getIntlLocale(locale), {
+  return new Intl.DateTimeFormat("id-ID", {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -95,10 +88,10 @@ function formatDate(value: string | null, locale: string): string {
   }).format(new Date(value));
 }
 
-function formatDateTime(value: string | null, locale: string): string {
+function formatDateTime(value: string | null): string {
   if (!value) return '-';
 
-  return new Intl.DateTimeFormat(getIntlLocale(locale), {
+  return new Intl.DateTimeFormat("id-ID", {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -143,8 +136,6 @@ function isValidHttpUrl(value: string): boolean {
 }
 
 function StudentCourseWeekDetailContent() {
-  const t = useTranslations('StudentCourseWeekDetail');
-  const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -165,7 +156,7 @@ function StudentCourseWeekDetailContent() {
 
   useEffect(() => {
     if (!Number.isInteger(courseId) || courseId <= 0 || !Number.isInteger(weekNumber) || weekNumber <= 0) {
-      setError(t('invalidCourseOrWeek'));
+      setError("ID kelas atau minggu tidak valid.");
       setIsLoading(false);
       return;
     }
@@ -196,17 +187,17 @@ function StudentCourseWeekDetailContent() {
           );
         }
 
-        setError(getErrorMessage(requestError, t('loadError')));
+        setError(getErrorMessage(requestError, "Gagal memuat materi minggu ini."));
       } finally {
         setIsLoading(false);
       }
     };
 
     void loadWeekDetail();
-  }, [courseId, weekNumber, t]);
+  }, [courseId, weekNumber]);
 
   const handleBack = () => {
-    router.push(`/student/courses/details?courseId=${courseId}`);
+    router.push(`/id/student/courses/details?courseId=${courseId}`);
   };
 
   const handleSubmitAssignment = async (
@@ -223,7 +214,7 @@ function StudentCourseWeekDetailContent() {
     if (!linkUrl) {
       setSubmissionErrors((current) => ({
         ...current,
-        [assignmentId]: t('linkRequired'),
+        [assignmentId]: "Tautan pengumpulan wajib diisi.",
       }));
       return;
     }
@@ -231,7 +222,7 @@ function StudentCourseWeekDetailContent() {
     if (!isValidHttpUrl(linkUrl)) {
       setSubmissionErrors((current) => ({
         ...current,
-        [assignmentId]: t('invalidLink'),
+        [assignmentId]: "Masukkan tautan yang valid.",
       }));
       return;
     }
@@ -260,7 +251,7 @@ function StudentCourseWeekDetailContent() {
     } catch (requestError) {
       setSubmissionErrors((current) => ({
         ...current,
-        [assignmentId]: getErrorMessage(requestError, t('submitError')),
+        [assignmentId]: getErrorMessage(requestError, "Gagal mengumpulkan tugas."),
       }));
     } finally {
       setSubmittingAssignmentId(null);
@@ -268,11 +259,11 @@ function StudentCourseWeekDetailContent() {
   };
 
   const getMaterialLabel = (type: MaterialType): string => {
-    return t(`materialTypes.${type}`);
+    return ({ pdf: "PDF", ppt: "PPT", video_link: "Video", yt_link: "YouTube" }[type] ?? type);
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center">{t('loading')}</div>;
+    return <div className="p-8 text-center">{"Memuat..."}</div>;
   }
 
   if (!course || !week) {
@@ -280,7 +271,7 @@ function StudentCourseWeekDetailContent() {
       <div className="space-y-6">
         <Button variant="outline" onClick={handleBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          {t('backToWeekList')}
+          {"Kembali ke Daftar Minggu"}
         </Button>
 
         <div className="rounded-3xl border border-gray-200 bg-white p-8 text-center shadow-sm">
@@ -288,10 +279,10 @@ function StudentCourseWeekDetailContent() {
             <LockKeyhole className="mx-auto mb-4 h-12 w-12 text-gray-400" />
           )}
           <p className={`text-lg font-medium ${isLocked ? 'text-gray-900' : 'text-red-500'}`}>
-            {isLocked ? t('weekLocked') : t('weekDataUnavailable')}
+            {isLocked ? "Minggu ini masih terkunci" : "Data minggu belum tersedia"}
           </p>
           <p className="mt-2 text-gray-500">
-            {error || t('returnToWeekList')}
+            {error || "Silakan kembali ke daftar minggu pembelajaran."}
           </p>
         </div>
       </div>
@@ -312,17 +303,17 @@ function StudentCourseWeekDetailContent() {
           className="mb-4 flex items-center text-sm text-white/70 transition-colors hover:text-white"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          {t('backToWeekList')}
+          {"Kembali ke Daftar Minggu"}
         </button>
         <h1 className="text-3xl font-bold tracking-tight">{course.title}</h1>
         <p className="mt-2 text-white/70">
-          {t('weekTitle', { week: week.week_number })}
+          {`Minggu ${week.week_number}`}
         </p>
       </div>
 
       <div>
         <h3 className="mb-4 text-lg font-semibold text-gray-900">
-          {t('materials')}
+          {"Materi"}
         </h3>
         <div className="space-y-3">
           {materials.length > 0 ? (
@@ -353,7 +344,7 @@ function StudentCourseWeekDetailContent() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {t('open')}
+                      {"Buka"}
                       <ExternalLink className="ml-2 h-4 w-4" />
                     </a>
                   </Button>
@@ -367,7 +358,7 @@ function StudentCourseWeekDetailContent() {
           ) : (
             <div className="rounded-3xl border border-gray-200 bg-white p-8 text-center">
               <p className="text-gray-500 italic">
-                {t('emptyMaterials', { week: week.week_number })}
+                {`Belum ada materi untuk Minggu ${week.week_number}.`}
               </p>
             </div>
           )}
@@ -376,7 +367,7 @@ function StudentCourseWeekDetailContent() {
 
       <div>
         <h3 className="mb-4 text-lg font-semibold text-gray-900">
-          {t('assignment')}
+          {"Tugas"}
         </h3>
 
         {assignments.length > 0 ? (
@@ -408,22 +399,22 @@ function StudentCourseWeekDetailContent() {
                           : 'bg-emerald-100 text-emerald-700'
                       }`}
                       >
-                        {submission.status === 'graded' ? t('graded') : t('submitted')}
+                        {submission.status === 'graded' ? "Sudah Dinilai" : "Sudah Dikumpulkan"}
                       </span>
                     )}
                   </div>
 
                   <div className="mt-6 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
                     <div>
-                      <p className="text-gray-500">{t('startDate')}</p>
+                      <p className="text-gray-500">{"Mulai"}</p>
                       <p className="font-medium text-gray-900">
-                        {formatDate(assignment.start_date, locale)}
+                        {formatDate(assignment.start_date)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500">{t('dueDate')}</p>
+                      <p className="text-gray-500">{"Batas Waktu"}</p>
                       <p className="font-medium text-gray-900">
-                        {formatDate(assignment.end_date, locale)}
+                        {formatDate(assignment.end_date)}
                       </p>
                     </div>
                   </div>
@@ -431,7 +422,7 @@ function StudentCourseWeekDetailContent() {
                   {assignment.gdrive_submission_link && (
                     <div className="mt-6 rounded-2xl border border-amber-100 bg-amber-50 p-5">
                       <p className="mb-2 text-sm font-medium text-amber-700">
-                        {t('submissionFolder')}
+                        {"Folder Pengumpulan"}
                       </p>
                       <a
                         href={assignment.gdrive_submission_link}
@@ -439,7 +430,7 @@ function StudentCourseWeekDetailContent() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center break-all text-sm font-medium text-[#0D542B] hover:underline"
                       >
-                        {t('openGoogleDrive')}
+                        {"Buka Google Drive"}
                         <ExternalLink className="ml-2 h-4 w-4 shrink-0" />
                       </a>
                       {assignment.submission_note && (
@@ -456,10 +447,10 @@ function StudentCourseWeekDetailContent() {
                         <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
                         <div className="min-w-0 flex-1">
                           <p className="font-medium text-emerald-800">
-                            {t('assignmentSubmitted')}
+                            {"Tugas sudah dikumpulkan"}
                           </p>
                           <p className="mt-1 text-sm text-emerald-700">
-                            {formatDateTime(submission.submitted_at, locale)} {t('timeZoneLabel')}
+                            {formatDateTime(submission.submitted_at)} {"WIB"}
                           </p>
 
                           {submission.link_url && (
@@ -477,11 +468,11 @@ function StudentCourseWeekDetailContent() {
                           {submission.status === 'graded' && (
                             <div className="mt-4 border-t border-emerald-200 pt-4">
                               <p className="text-sm text-emerald-700">
-                                {t('score')}: <span className="font-semibold">{submission.score ?? '-'}</span>
+                                {"Nilai"}: <span className="font-semibold">{submission.score ?? '-'}</span>
                               </p>
                               {submission.feedback && (
                                 <p className="mt-2 text-sm text-emerald-700">
-                                  {t('feedback')}: {submission.feedback}
+                                  {"Umpan balik"}: {submission.feedback}
                                 </p>
                               )}
                             </div>
@@ -499,7 +490,7 @@ function StudentCourseWeekDetailContent() {
                           htmlFor={`submission-link-${assignment.id}`}
                           className="mb-2 block text-sm font-medium text-gray-700"
                         >
-                          {t('assignmentLink')}
+                          {"Tautan Tugas"}
                         </label>
                         <div className="relative">
                           <Link2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -525,7 +516,7 @@ function StudentCourseWeekDetailContent() {
                           />
                         </div>
                         <p className="mt-2 text-xs text-gray-500">
-                          {t('linkAccessHint')}
+                          {"Pastikan tautan dapat diakses oleh dosen."}
                         </p>
                       </div>
 
@@ -551,10 +542,10 @@ function StudentCourseWeekDetailContent() {
                         {isSubmitting ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {t('submitting')}
+                            {"Mengumpulkan..."}
                           </>
                         ) : (
-                          t('submitAssignment')
+                          "Kumpulkan Tugas"
                         )}
                       </Button>
                     </form>
@@ -564,13 +555,13 @@ function StudentCourseWeekDetailContent() {
                       <div>
                         <p className="font-medium text-gray-800">
                           {availability === 'not_started'
-                            ? t('submissionNotStarted')
-                            : t('submissionClosed')}
+                            ? "Pengumpulan belum dibuka"
+                            : "Pengumpulan sudah ditutup"}
                         </p>
                         <p className="mt-1 text-sm text-gray-500">
                           {availability === 'not_started'
-                            ? t('submissionStartsAt', { date: formatDate(assignment.start_date, locale) })
-                            : t('submissionEndsAt', { date: formatDate(assignment.end_date, locale) })}
+                            ? `Pengumpulan dibuka pada ${formatDate(assignment.start_date)}`
+                            : `Pengumpulan ditutup pada ${formatDate(assignment.end_date)}`}
                         </p>
                       </div>
                     </div>
@@ -582,7 +573,7 @@ function StudentCourseWeekDetailContent() {
         ) : (
           <div className="rounded-3xl border border-gray-200 bg-white p-8 text-center">
             <p className="text-gray-500 italic">
-              {t('emptyAssignments', { week: week.week_number })}
+              {`Belum ada tugas untuk Minggu ${week.week_number}.`}
             </p>
           </div>
         )}
@@ -592,10 +583,8 @@ function StudentCourseWeekDetailContent() {
 }
 
 export default function StudentCourseWeekDetailPage() {
-  const t = useTranslations('StudentCourseWeekDetail');
-
   return (
-    <Suspense fallback={<div className="p-8 text-center">{t('loading')}</div>}>
+    <Suspense fallback={<div className="p-8 text-center">{"Memuat..."}</div>}>
       <StudentCourseWeekDetailContent />
     </Suspense>
   );

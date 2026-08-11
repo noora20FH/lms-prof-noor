@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
 import { api, csrf, getErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,12 +107,6 @@ const DEFAULT_WEEK_TITLES: Record<number, string> = {
   3: "Laravel API & Authentication",
 };
 
-function getIntlLocale(locale: string) {
-  if (locale === "zh") return "zh-CN";
-  if (locale === "en") return "en-US";
-  return "id-ID";
-}
-
 const getApiOrigin = (): string => {
   const baseUrl = api.defaults.baseURL;
 
@@ -153,8 +146,6 @@ const mapApiMaterial = (material: ApiMaterial): Material => ({
 });
 
 export default function ProfessorMaterials() {
-  const t = useTranslations("ProfessorMaterials");
-  const locale = useLocale();
 
   const [courses, setCourses] = useState<ProfessorCourse[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
@@ -182,10 +173,10 @@ export default function ProfessorMaterials() {
         weekNumber,
         title:
           DEFAULT_WEEK_TITLES[weekNumber] ??
-          t("weekTitle", { week: weekNumber }),
+          `Minggu ${weekNumber}`,
       };
     });
-  }, [selectedCourse?.total_weeks, t]);
+  }, [selectedCourse?.total_weeks]);
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -202,12 +193,12 @@ export default function ProfessorMaterials() {
           setSelectedCourseId(String(loadedCourses[0].id));
         }
       } catch (error) {
-        window.alert(getErrorMessage(error, t("loadCoursesError")));
+        window.alert(getErrorMessage(error, "Gagal memuat daftar kelas."));
       }
     };
 
     void loadCourses();
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     if (!selectedCourseId) {
@@ -230,30 +221,30 @@ export default function ProfessorMaterials() {
         setMaterials((response.data.materials ?? []).map(mapApiMaterial));
         setWeekSchedules(response.data.weeks ?? []);
       } catch (error) {
-        window.alert(getErrorMessage(error, t("loadMaterialsError")));
+        window.alert(getErrorMessage(error, "Gagal memuat materi."));
       }
     };
 
     void loadMaterials();
-  }, [selectedCourseId, t]);
+  }, [selectedCourseId]);
 
   const addMaterial = async (material: NewMaterialPayload) => {
     const contentUrl = normalizeExternalUrl(material.contentUrl);
 
     if (!material.courseId) {
-      const message = t("selectCourseFirst");
+      const message = "Pilih kelas terlebih dahulu.";
       window.alert(message);
       throw new Error(message);
     }
 
     if (!material.unlockAt) {
-      const message = t("unlockAtRequired");
+      const message = "Jadwal buka wajib diisi.";
       window.alert(message);
       throw new Error(message);
     }
 
     if (!contentUrl) {
-      const message = t("contentUrlRequired");
+      const message = "Tautan materi wajib diisi.";
       window.alert(message);
       throw new Error(message);
     }
@@ -268,7 +259,7 @@ export default function ProfessorMaterials() {
           week_number: material.weekNumber,
           week_title:
             DEFAULT_WEEK_TITLES[material.weekNumber] ??
-            t("weekTitle", { week: material.weekNumber }),
+            `Minggu ${material.weekNumber}`,
           title: material.title,
           type: material.type,
           content_url: contentUrl,
@@ -301,7 +292,7 @@ export default function ProfessorMaterials() {
         );
       });
     } catch (error) {
-      const message = getErrorMessage(error, t("saveMaterialError"));
+      const message = getErrorMessage(error, "Gagal menyimpan materi.");
       window.alert(message);
       throw new Error(message);
     }
@@ -341,14 +332,14 @@ export default function ProfessorMaterials() {
 
       window.alert(response.data.message);
     } catch (error) {
-      const message = getErrorMessage(error, t("updateAccessError"));
+      const message = getErrorMessage(error, "Gagal memperbarui akses minggu.");
       window.alert(message);
       throw new Error(message);
     }
   };
 
   const deleteMaterial = async (materialId: number) => {
-    const confirmed = window.confirm(t("confirmDeleteMaterial"));
+    const confirmed = window.confirm("Hapus materi ini?");
 
     if (!confirmed) {
       return;
@@ -362,7 +353,7 @@ export default function ProfessorMaterials() {
         previousMaterials.filter((material) => material.id !== materialId),
       );
     } catch (error) {
-      window.alert(getErrorMessage(error, t("deleteMaterialError")));
+      window.alert(getErrorMessage(error, "Gagal menghapus materi."));
     }
   };
 
@@ -389,7 +380,7 @@ export default function ProfessorMaterials() {
   const getMaterialTypeLabel = (type: MaterialType) => {
     if (type === "pdf") return "PDF";
     if (type === "ppt") return "PPT";
-    if (type === "video_link") return t("materialTypes.video");
+    if (type === "video_link") return "Video";
     if (type === "yt_link") return "YouTube";
 
     return type;
@@ -410,9 +401,9 @@ export default function ProfessorMaterials() {
   };
 
   const getAccessStatusLabel = (status: WeekAccessStatus) => {
-    if (status === "active") return t("accessStatus.active");
-    if (status === "scheduled") return t("accessStatus.scheduled");
-    return t("accessStatus.locked");
+    if (status === "active") return "Terbuka";
+    if (status === "scheduled") return "Terjadwal";
+    return "Terkunci";
   };
 
   const getAccessStatusClassName = (status: WeekAccessStatus) => {
@@ -429,16 +420,16 @@ export default function ProfessorMaterials() {
 
   const formatAccessSchedule = (unlockAt: string | null) => {
     if (!unlockAt) {
-      return t("accessNotScheduled");
+      return "Belum dijadwalkan";
     }
 
-    const date = new Intl.DateTimeFormat(getIntlLocale(locale), {
+    const date = new Intl.DateTimeFormat("id-ID", {
       dateStyle: "long",
       timeStyle: "short",
       timeZone: "Asia/Jakarta",
     }).format(new Date(unlockAt));
 
-    return t("openedAt", { date });
+    return `Dibuka ${date}`;
   };
 
   return (
@@ -451,20 +442,20 @@ export default function ProfessorMaterials() {
         }}
       >
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="mt-1 text-white/80">{t("subtitle")}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{"Materi Pembelajaran"}</h1>
+          <p className="mt-1 text-white/80">{"Kelola materi dan jadwal akses setiap minggu."}</p>
         </div>
       </div>
 
       <Card className="border border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle>{t("selectCourse")}</CardTitle>
+          <CardTitle>{"Pilih Kelas"}</CardTitle>
         </CardHeader>
 
         <CardContent>
           <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
             <SelectTrigger className="w-full md:w-96">
-              <SelectValue placeholder={t("selectCoursePlaceholder")} />
+              <SelectValue placeholder={"Pilih kelas..."} />
             </SelectTrigger>
 
             <SelectContent>
@@ -478,7 +469,7 @@ export default function ProfessorMaterials() {
 
           {selectedCourse && (
             <p className="mt-3 text-sm text-gray-500">
-              {t("activeCourse")}{" "}
+              {"Kelas aktif:"}{" "}
               <span className="font-medium text-gray-800">
                 {selectedCourse.title}
               </span>
@@ -507,13 +498,10 @@ export default function ProfessorMaterials() {
               <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {t("weekHeading", {
-                      week: week.weekNumber,
-                      title: week.title,
-                    })}
+                    {`Minggu ${week.weekNumber}: ${week.title}`}
                   </h2>
                   <p className="mt-1 text-sm text-gray-500">
-                    {t("materialsAvailable", { count: weekMaterials.length })}
+                    {`${weekMaterials.length} materi tersedia`}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <span
@@ -545,17 +533,14 @@ export default function ProfessorMaterials() {
                     variant="outline"
                     onClick={() => {
                       if (!numericCourseId) {
-                        window.alert(t("selectCourseFirst"));
+                        window.alert("Pilih kelas terlebih dahulu.");
                         return;
                       }
 
                       setEditingWeek({
                         courseId: numericCourseId,
                         weekNumber: week.weekNumber,
-                        title: t("weekHeading", {
-                          week: week.weekNumber,
-                          title: week.title,
-                        }),
+                        title: `Minggu ${week.weekNumber}: ${week.title}`,
                         unlockAt: weekSchedule?.unlock_at ?? null,
                         accessStatus,
                       });
@@ -563,31 +548,28 @@ export default function ProfessorMaterials() {
                     className="w-fit"
                   >
                     <Pencil className="mr-2 h-4 w-4" />
-                    {t("editAccess")}
+                    {"Atur Akses"}
                   </Button>
 
                   <Button
                     type="button"
                     onClick={() => {
                       if (!numericCourseId) {
-                        window.alert(t("selectCourseFirst"));
+                        window.alert("Pilih kelas terlebih dahulu.");
                         return;
                       }
 
                       setSelectedWeek({
                         courseId: numericCourseId,
                         weekNumber: week.weekNumber,
-                        title: t("weekHeading", {
-                          week: week.weekNumber,
-                          title: week.title,
-                        }),
+                        title: `Minggu ${week.weekNumber}: ${week.title}`,
                         unlockAt: weekSchedule?.unlock_at ?? null,
                       });
                     }}
                     className="w-fit bg-[#0D542B] hover:bg-[#0A3F21]"
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    {t("addMaterial")}
+                    {"Tambah Materi"}
                   </Button>
                 </div>
               </div>
@@ -596,10 +578,10 @@ export default function ProfessorMaterials() {
                 <div className="rounded-2xl border border-dashed border-gray-300 p-8 text-center">
                   <FileText className="mx-auto mb-3 h-10 w-10 text-gray-400" />
                   <p className="font-medium text-gray-900">
-                    {t("emptyMaterialTitle")}
+                    {"Belum ada materi"}
                   </p>
                   <p className="mt-1 text-sm text-gray-500">
-                    {t("emptyMaterialDescription")}
+                    {"Tambahkan materi untuk minggu ini."}
                   </p>
                 </div>
               ) : (
@@ -626,11 +608,11 @@ export default function ProfessorMaterials() {
                               rel="noopener noreferrer"
                               className="mt-1 inline-block text-sm font-medium text-[#0D542B] hover:underline"
                             >
-                              {t("viewMaterial")}
+                              {"Lihat Materi"}
                             </a>
                           ) : (
                             <span className="mt-1 inline-block text-sm text-gray-400">
-                              {t("linkUnavailable")}
+                              {"Tautan belum tersedia"}
                             </span>
                           )}
                         </div>
@@ -649,7 +631,7 @@ export default function ProfessorMaterials() {
                           className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                         >
                           <Trash2 className="mr-1 h-4 w-4" />
-                          {t("delete")}
+                          {"Hapus"}
                         </Button>
                       </div>
                     </div>

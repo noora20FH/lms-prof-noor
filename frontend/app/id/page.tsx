@@ -1,12 +1,5 @@
-import { redirect } from "@/i18n/navigation";
-import type { Locale } from "@/i18n/routing";
+import { redirect } from "next/navigation";
 
-type Props = {
-  params: Promise<{ locale: Locale }>;
-};
-
-export default async function HomePage({ params }: Props) {
-  const { locale } = await params;
-
-  redirect({ href: "/login", locale });
+export default function HomePage() {
+  redirect("/id/login");
 }

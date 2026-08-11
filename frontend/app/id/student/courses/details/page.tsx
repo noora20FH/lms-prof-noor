@@ -2,8 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
+import { useRouter } from "next/navigation";
 import { LockKeyhole } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { api, getErrorMessage } from '@/lib/api';
@@ -31,15 +30,7 @@ type CourseWeeksPayload = {
   data: WeekData[];
 };
 
-function getIntlLocale(locale: string) {
-  if (locale === 'zh') return 'zh-CN';
-  if (locale === 'en') return 'en-US';
-  return 'id-ID';
-}
-
 function StudentCourseDetailContent() {
-  const t = useTranslations('StudentCourseDetail');
-  const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const courseId = Number(searchParams.get('courseId'));
@@ -51,7 +42,7 @@ function StudentCourseDetailContent() {
 
   useEffect(() => {
     if (!Number.isInteger(courseId) || courseId <= 0) {
-      setError(t('invalidCourse'));
+      setError("ID kelas tidak valid.");
       setIsLoading(false);
       return;
     }
@@ -70,14 +61,14 @@ function StudentCourseDetailContent() {
       } catch (requestError) {
         setCourse(null);
         setWeeks([]);
-        setError(getErrorMessage(requestError, t('loadError')));
+        setError(getErrorMessage(requestError, "Gagal memuat detail kelas."));
       } finally {
         setIsLoading(false);
       }
     };
 
     void loadCourseWeeks();
-  }, [courseId, t]);
+  }, [courseId]);
 
   const progress = useMemo(() => {
     if (weeks.length === 0) {
@@ -90,16 +81,16 @@ function StudentCourseDetailContent() {
 
   const formatUnlockDate = (value: string | null): string => {
     if (!value) {
-      return t('accessNotScheduled');
+      return "Akses belum dijadwalkan";
     }
 
-    const date = new Intl.DateTimeFormat(getIntlLocale(locale), {
+    const date = new Intl.DateTimeFormat("id-ID", {
       dateStyle: 'long',
       timeStyle: 'short',
       timeZone: 'Asia/Jakarta',
     }).format(new Date(value));
 
-    return t('openedAt', { date });
+    return `Dibuka ${date}`;
   };
 
   const handleWeekSelect = (week: WeekData) => {
@@ -108,19 +99,19 @@ function StudentCourseDetailContent() {
     }
 
     router.push(
-      `/student/courses/details/week?courseId=${courseId}&week=${week.week_number}`
+      `/id/student/courses/details/week?courseId=${courseId}&week=${week.week_number}`
     );
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center">{t('loading')}</div>;
+    return <div className="p-8 text-center">{"Memuat..."}</div>;
   }
 
   if (!course) {
     return (
       <div className="p-8 text-center">
         <p className="text-lg text-red-500">
-          {error || t('courseNotFound')}
+          {error || "Kelas tidak ditemukan"}
         </p>
       </div>
     );
@@ -137,10 +128,10 @@ function StudentCourseDetailContent() {
       >
         <button
           type="button"
-          onClick={() => router.push('/student/courses')}
+          onClick={() => router.push('/id/student/courses')}
           className="mb-4 flex items-center text-sm text-white/70 transition-colors hover:text-white"
         >
-          ← {t('backToCourses')}
+          ← {"Kembali ke Kelas"}
         </button>
         <h2 className="text-3xl font-bold tracking-tight">{course.title}</h2>
         <p className="mt-2 text-white/70">{course.description}</p>
@@ -148,7 +139,7 @@ function StudentCourseDetailContent() {
 
       <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-gray-600">{t('overallProgress')}</span>
+          <span className="text-gray-600">{"Progres Keseluruhan"}</span>
           <span className="text-2xl font-semibold text-[#0D542B]">
             {progress}%
           </span>
@@ -158,7 +149,7 @@ function StudentCourseDetailContent() {
 
       <div>
         <h3 className="mb-4 text-lg font-semibold text-gray-900">
-          {t('courseWeeks')}
+          {"Minggu Pembelajaran"}
         </h3>
         <div className="divide-y divide-gray-200 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
           {weeks.map((week) => (
@@ -185,13 +176,10 @@ function StudentCourseDetailContent() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    {week.title || t('weekTitle', { week: week.week_number })}
+                    {week.title || `Minggu ${week.week_number}`}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {t('weekMeta', {
-                      materials: week.materials_count,
-                      assignments: week.assignments_count,
-                    })}
+                    {`${week.materials_count} materi • ${week.assignments_count} tugas`}
                   </p>
                   {week.is_locked && (
                     <p className="mt-1 text-xs text-gray-500">
@@ -211,7 +199,7 @@ function StudentCourseDetailContent() {
 
           {weeks.length === 0 && (
             <div className="p-8 text-center text-gray-500">
-              {t('emptyWeeks')}
+              {"Belum ada minggu pembelajaran."}
             </div>
           )}
         </div>
@@ -221,10 +209,8 @@ function StudentCourseDetailContent() {
 }
 
 export default function StudentCourseDetailPage() {
-  const t = useTranslations('StudentCourseDetail');
-
   return (
-    <Suspense fallback={<div className="p-8 text-center">{t('loading')}</div>}>
+    <Suspense fallback={<div className="p-8 text-center">{"Memuat..."}</div>}>
       <StudentCourseDetailContent />
     </Suspense>
   );

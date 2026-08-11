@@ -1,12 +1,10 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 
-import { Link, useRouter } from "@/i18n/navigation";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,13 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { api, csrf, getErrorMessage } from "@/lib/api";
 export default function RegisterContent() {
-  const searchParams = useSearchParams();
-
-  const selectedRole = searchParams.get("role");
   const router = useRouter();
-  const t = useTranslations("Auth.register");
-  const common = useTranslations("Common");
-
   const [name, setName] = useState("");
   const [nim, setNim] = useState("");
   const [kelas, setKelas] = useState("");
@@ -46,7 +38,7 @@ export default function RegisterContent() {
     setSuccess("");
 
     if (password !== confirmPassword) {
-      setError(t("passwordMismatch"));
+      setError("Konfirmasi kata sandi tidak cocok.");
       setLoading(false);
       return;
     }
@@ -64,14 +56,14 @@ export default function RegisterContent() {
         role: "student",
       });
 
-      setSuccess(t("success"));
+      setSuccess("Pendaftaran berhasil. Anda akan diarahkan ke halaman login.");
 
       setTimeout(() => {
-        router.push("/login");
+        router.push("/id/login");
       }, 1500);
     } catch (err) {
       console.error("Register error:", err);
-      setError(getErrorMessage(err, t("errorFallback")));
+      setError(getErrorMessage(err, "Pendaftaran gagal. Silakan coba lagi."));
     } finally {
       setLoading(false);
     }
@@ -79,10 +71,6 @@ export default function RegisterContent() {
   // Seluruh state, fungsi register, dan JSX register Anda
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F172B] via-[#0D542B] to-[#004F3B] p-4">
-      <div className="fixed right-4 top-4 z-10">
-        <LanguageSwitcher compact />
-      </div>
-
       <Card className="w-full max-w-md bg-white/95 backdrop-blur-xl shadow-2xl border-0">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-[#0D542B] to-[#004F3B] rounded-2xl flex items-center justify-center text-3xl mb-4">
@@ -90,11 +78,11 @@ export default function RegisterContent() {
           </div>
 
           <CardTitle className="text-3xl font-bold text-gray-900">
-            {t("title")}
+            {"Daftar Akun"}
           </CardTitle>
 
           <CardDescription className="text-gray-600">
-            {t("description")}
+            {"Buat akun mahasiswa untuk mengakses LMS"}
           </CardDescription>
         </CardHeader>
 
@@ -113,7 +101,7 @@ export default function RegisterContent() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="name">{common("fullName")}</Label>
+              <Label htmlFor="name">{"Nama lengkap"}</Label>
               <Input
                 id="name"
                 value={name}
@@ -133,7 +121,7 @@ export default function RegisterContent() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="kelas">{common("class")}</Label>
+              <Label htmlFor="kelas">{"Kelas"}</Label>
               <Input
                 id="kelas"
                 value={kelas}
@@ -143,7 +131,7 @@ export default function RegisterContent() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">{common("email")}</Label>
+              <Label htmlFor="email">{"Email"}</Label>
               <Input
                 id="email"
                 type="email"
@@ -154,7 +142,7 @@ export default function RegisterContent() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">{common("password")}</Label>
+              <Label htmlFor="password">{"Kata sandi"}</Label>
               <Input
                 id="password"
                 type="password"
@@ -167,7 +155,7 @@ export default function RegisterContent() {
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">
-                {common("confirmPassword")}
+                {"Konfirmasi kata sandi"}
               </Label>
               <Input
                 id="confirmPassword"
@@ -187,21 +175,21 @@ export default function RegisterContent() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  {t("loading")}
+                  {"Memproses..."}
                 </>
               ) : (
-                t("submit")
+                "Daftar"
               )}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">{t("hasAccount")} </span>
+            <span className="text-gray-600">{"Sudah punya akun?"} </span>
             <Link
-              href="/login"
+              href="/id/login"
               className="font-medium text-[#0D542B] hover:underline"
             >
-              {t("loginLink")}
+              {"Masuk"}
             </Link>
           </div>
         </CardContent>

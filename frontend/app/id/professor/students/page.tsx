@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -71,8 +70,6 @@ function mapStudent(student: ApiProfessorStudent): ProfessorStudent {
 }
 
 export default function ProfessorStudents() {
-  const t = useTranslations('ProfessorStudents');
-
   const [students, setStudents] = useState<ProfessorStudent[]>([]);
   const [deletedStudents, setDeletedStudents] = useState<ProfessorStudent[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -95,7 +92,7 @@ export default function ProfessorStudents() {
       setStudents((activeResponse.data.students ?? []).map(mapStudent));
       setDeletedStudents((deletedResponse.data.students ?? []).map(mapStudent));
     } catch (err) {
-      toast.error(getErrorMessage(err, t('loadError')));
+      toast.error(getErrorMessage(err, "Gagal memuat data mahasiswa."));
     } finally {
       setIsLoading(false);
     }
@@ -144,9 +141,9 @@ export default function ProfessorStudents() {
         )
       );
 
-      toast.success(t('approveSuccess'));
+      toast.success("Mahasiswa berhasil disetujui.");
     } catch (err) {
-      toast.error(getErrorMessage(err, t('approveError')));
+      toast.error(getErrorMessage(err, "Gagal menyetujui mahasiswa."));
     } finally {
       setProcessingEnrollmentId(null);
     }
@@ -203,12 +200,12 @@ export default function ProfessorStudents() {
         }
       );
 
-      toast.success(data.message ?? t('addSuccess'));
+      toast.success(data.message ?? "Mahasiswa berhasil ditambahkan.");
       setShowAddStudentModal(false);
       setStudentView('active');
       await fetchStudents();
     } catch (err) {
-      const message = getErrorMessage(err, t('addError'));
+      const message = getErrorMessage(err, "Gagal menambahkan mahasiswa.");
       toast.error(message);
       throw new Error(message);
     }
@@ -236,22 +233,22 @@ export default function ProfessorStudents() {
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
-          <p className="text-gray-500">{t('subtitle')}</p>
+          <h1 className="text-3xl font-bold text-gray-900">{"Mahasiswa"}</h1>
+          <p className="text-gray-500">{"Kelola mahasiswa dan status pendaftarannya."}</p>
         </div>
         <Button
           onClick={() => setShowAddStudentModal(true)}
           className="bg-[#0D542B] hover:bg-[#0A3F21]"
         >
           <UserPlus className="mr-2 h-4 w-4" />
-          {t('inviteStudent')}
+          {"Tambah Mahasiswa"}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">{t('totalStudents')}</p>
+            <p className="text-sm text-gray-500">{"Total Mahasiswa"}</p>
             <Users className="h-5 w-5 text-[#0D542B]" />
           </div>
           <p className="mt-2 text-3xl font-semibold text-gray-900">
@@ -260,7 +257,7 @@ export default function ProfessorStudents() {
         </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">{t('approved')}</p>
+            <p className="text-sm text-gray-500">{"Disetujui"}</p>
             <CheckCircle className="h-5 w-5 text-emerald-600" />
           </div>
           <p className="mt-2 text-3xl font-semibold text-gray-900">
@@ -269,7 +266,7 @@ export default function ProfessorStudents() {
         </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">{t('pending')}</p>
+            <p className="text-sm text-gray-500">{"Menunggu"}</p>
             <Clock className="h-5 w-5 text-amber-600" />
           </div>
           <p className="mt-2 text-3xl font-semibold text-gray-900">
@@ -322,12 +319,12 @@ export default function ProfessorStudents() {
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
                 {studentView === 'active'
-                  ? t('allStudents', { count: filteredStudents.length })
+                  ? `Semua Mahasiswa (${filteredStudents.length})`
                   : `Data mahasiswa terhapus (${filteredStudents.length})`}
               </h2>
               <p className="text-sm text-gray-500">
                 {studentView === 'active'
-                  ? t('manageByEnrollment')
+                  ? "Kelola Berdasarkan Pendaftaran"
                   : 'Data di bawah masih tersimpan dan dapat dipulihkan kembali.'}
               </p>
             </div>
@@ -338,7 +335,7 @@ export default function ProfessorStudents() {
                   type="text"
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder={t('searchPlaceholder')}
+                  placeholder={"Cari nama, NIM, email, atau kelas..."}
                   className="w-full rounded-xl border border-gray-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-[#0D542B] focus:ring-1 focus:ring-[#0D542B] sm:w-72"
                 />
               </div>
@@ -354,7 +351,7 @@ export default function ProfessorStudents() {
                           : 'cursor-pointer'
                       }
                     >
-                      {t('all')}
+                      {"Semua"}
                     </Badge>
                   </button>
                   <button type="button" onClick={() => setActiveStatus('approved')}>
@@ -366,7 +363,7 @@ export default function ProfessorStudents() {
                           : 'cursor-pointer bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
                       }
                     >
-                      {t('approved')}
+                      {"Disetujui"}
                     </Badge>
                   </button>
                   <button type="button" onClick={() => setActiveStatus('pending')}>
@@ -378,7 +375,7 @@ export default function ProfessorStudents() {
                           : 'cursor-pointer border-amber-300 text-amber-700'
                       }
                     >
-                      {t('pending')}
+                      {"Menunggu"}
                     </Badge>
                   </button>
                 </div>
@@ -388,7 +385,7 @@ export default function ProfessorStudents() {
         </div>
 
         {isLoading ? (
-          <div className="p-10 text-center text-gray-500">{t('loading')}</div>
+          <div className="p-10 text-center text-gray-500">{"Memuat..."}</div>
         ) : filteredStudents.length === 0 ? (
           <div className="p-10 text-center">
             {studentView === 'active' ? (
@@ -397,11 +394,11 @@ export default function ProfessorStudents() {
               <Trash2 className="mx-auto mb-3 h-10 w-10 text-gray-400" />
             )}
             <h3 className="font-semibold text-gray-900">
-              {studentView === 'active' ? t('emptyTitle') : 'Belum ada data terhapus'}
+              {studentView === 'active' ? "Belum ada mahasiswa" : 'Belum ada data terhapus'}
             </h3>
             <p className="mt-1 text-sm text-gray-500">
               {studentView === 'active'
-                ? t('emptyDescription')
+                ? "Data mahasiswa akan tampil di sini setelah tersedia."
                 : 'Mahasiswa yang dihapus dari mata kuliah akan tampil di sini.'}
             </p>
           </div>
@@ -466,12 +463,12 @@ export default function ProfessorStudents() {
                       {student.status === 'approved' ? (
                         <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
                           <CheckCircle className="mr-1 h-3 w-3" />
-                          {t('approved')}
+                          {"Disetujui"}
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="border-amber-300 text-amber-700">
                           <Clock className="mr-1 h-3 w-3" />
-                          {t('pending')}
+                          {"Menunggu"}
                         </Badge>
                       )}
 
@@ -484,7 +481,7 @@ export default function ProfessorStudents() {
                         >
                           {processingEnrollmentId === student.enrollmentId
                             ? 'Memproses...'
-                            : t('approve')}
+                            : "Setujui"}
                         </Button>
                       )}
 

@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { api, getErrorMessage } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useRouter } from '@/i18n/navigation';
+import { useRouter } from "next/navigation";
 
 interface AssignmentItem {
   id: number;
@@ -21,7 +20,6 @@ interface AssignmentItem {
 }
 
 export default function StudentAssignments() {
-  const t = useTranslations('StudentAssignments');
   const router = useRouter();
 
   const [pending, setPending] = useState<AssignmentItem[]>([]);
@@ -43,7 +41,7 @@ export default function StudentAssignments() {
         setPending(res.data.pending || []);
         setSubmitted(res.data.submitted || []);
       } catch (err) {
-        setError(getErrorMessage(err, t('loadError')));
+        setError(getErrorMessage(err, "Gagal memuat tugas."));
         setPending([]);
         setSubmitted([]);
       } finally {
@@ -52,10 +50,10 @@ export default function StudentAssignments() {
     };
 
     void fetchAssignments();
-  }, [t]);
+  }, []);
 
   const handleSubmitNow = (courseId: number, week: number) => {
-    router.push(`/student/courses/details/week?courseId=${courseId}&week=${week}`);
+    router.push(`/id/student/courses/details/week?courseId=${courseId}&week=${week}`);
   };
 
   const renderHeader = () => (
@@ -66,21 +64,21 @@ export default function StudentAssignments() {
           'linear-gradient(135deg, #0F172B 0%, #0D542B 50%, #004F3B 100%)',
       }}
     >
-      <h1 className="text-4xl font-bold">{t('title')}</h1>
-      <p className="mt-2 text-emerald-200">{t('subtitle')}</p>
+      <h1 className="text-4xl font-bold">{"Tugas"}</h1>
+      <p className="mt-2 text-emerald-200">{"Pantau dan selesaikan tugas Anda tepat waktu."}</p>
     </div>
   );
 
   const getDaysLeftText = (daysLeft: number) => {
     if (daysLeft < 0) {
-      return t('overdue', { days: Math.abs(daysLeft) });
+      return `${Math.abs(daysLeft)} hari terlambat`;
     }
 
     if (daysLeft === 0) {
-      return t('dueToday');
+      return "Jatuh tempo hari ini";
     }
 
-    return t('daysLeft', { days: daysLeft });
+    return `${daysLeft} hari lagi`;
   };
 
   if (loading) {
@@ -88,7 +86,7 @@ export default function StudentAssignments() {
       <div className="space-y-8">
         {renderHeader()}
         <div className="flex justify-center py-12">
-          <p className="text-gray-500">{t('loading')}</p>
+          <p className="text-gray-500">{"Memuat..."}</p>
         </div>
       </div>
     );
@@ -111,13 +109,13 @@ export default function StudentAssignments() {
 
       <div>
         <h3 className="mb-6 text-2xl font-semibold text-gray-900">
-          {t('pendingTitle', { count: pending.length })}
+          {`Tugas Belum Dikumpulkan (${pending.length})`}
         </h3>
         <div className="space-y-4">
           {pending.length === 0 ? (
             <Card className="border-0 shadow-sm">
               <CardContent className="p-6 text-center text-gray-500">
-                {t('noPending')}
+                {"Tidak ada tugas yang perlu dikumpulkan."}
               </CardContent>
             </Card>
           ) : (
@@ -149,13 +147,13 @@ export default function StudentAssignments() {
 
                   <div className="mt-6 flex items-center justify-between">
                     <p className="text-sm text-gray-600">
-                      {t('due')}: <span className="font-medium">{assignment.dueDate}</span>
+                      {"Batas waktu"}: <span className="font-medium">{assignment.dueDate}</span>
                     </p>
                     <Button
                       onClick={() => handleSubmitNow(assignment.courseId, assignment.week)}
                       className="bg-[#0D542B] px-8 hover:bg-[#0D542B]/90"
                     >
-                      {t('submitNow')}
+                      {"Kumpulkan Sekarang"}
                     </Button>
                   </div>
                 </CardContent>
@@ -167,13 +165,13 @@ export default function StudentAssignments() {
 
       <div>
         <h3 className="mb-6 text-2xl font-semibold text-gray-900">
-          {t('submittedTitle', { count: submitted.length })}
+          {`Tugas Terkumpul (${submitted.length})`}
         </h3>
         <div className="space-y-4">
           {submitted.length === 0 ? (
             <Card className="border-0 shadow-sm">
               <CardContent className="p-6 text-center text-gray-500">
-                {t('noSubmitted')}
+                {"Belum ada tugas yang dikumpulkan."}
               </CardContent>
             </Card>
           ) : (
@@ -188,17 +186,17 @@ export default function StudentAssignments() {
                       <p className="text-gray-500">{assignment.course}</p>
                     </div>
                     <span className="rounded-2xl bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-700">
-                      {t('submittedBadge')}
+                      {"Sudah dikumpulkan"}
                     </span>
                   </div>
                   {assignment.submittedDate && (
                     <p className="mt-4 text-sm text-gray-600">
-                      {t('submittedOn')}: <span className="font-medium">{assignment.submittedDate}</span>
+                      {"Dikumpulkan pada"}: <span className="font-medium">{assignment.submittedDate}</span>
                     </p>
                   )}
                   {assignment.score && (
                     <p className="mt-1 text-sm text-emerald-600">
-                      {t('score')}: <span className="font-bold">{assignment.score}</span>
+                      {"Nilai"}: <span className="font-bold">{assignment.score}</span>
                     </p>
                   )}
                 </CardContent>

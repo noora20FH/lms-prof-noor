@@ -1,8 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
+import { useRouter } from "next/navigation";
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -40,7 +39,6 @@ type CoursesResponse = {
 };
 
 export default function StudentCoursesPage() {
-  const t = useTranslations('StudentCourses');
   const router = useRouter();
 
   const [courses, setCourses] = useState<StudentCourse[]>([]);
@@ -58,11 +56,11 @@ export default function StudentCoursesPage() {
       setCourses(response.data.courses ?? []);
     } catch (requestError) {
       setCourses([]);
-      setError(getErrorMessage(requestError, t('loadError')));
+      setError(getErrorMessage(requestError, "Gagal memuat daftar kelas."));
     } finally {
       setIsLoading(false);
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     void loadCourses();
@@ -95,7 +93,7 @@ export default function StudentCoursesPage() {
 
       await loadCourses();
     } catch (requestError) {
-      window.alert(getErrorMessage(requestError, t('enrollmentError')));
+      window.alert(getErrorMessage(requestError, "Gagal memproses pendaftaran kelas."));
     } finally {
       setProcessingCourseId(null);
     }
@@ -103,13 +101,13 @@ export default function StudentCoursesPage() {
 
   const handleCourseAction = async (course: StudentCourse) => {
     if (course.enrollment_status === 'approved') {
-      router.push(`/student/courses/details?courseId=${course.id}`);
+      router.push(`/id/student/courses/details?courseId=${course.id}`);
       return;
     }
 
     if (course.enrollment_status === 'pending') {
       const confirmed = window.confirm(
-        t('confirmCancelEnrollment', { title: course.title })
+        `Batalkan permintaan pendaftaran untuk "${course.title}"?`
       );
 
       if (confirmed) {
@@ -128,38 +126,38 @@ export default function StudentCoursesPage() {
 
   const getCourseActionLabel = (course: StudentCourse): string => {
     if (processingCourseId === course.id) {
-      return t('actions.processing');
+      return "Memproses...";
     }
 
     if (course.enrollment_status === 'approved') {
-      return t('actions.continueLearning');
+      return "Lanjut Belajar";
     }
 
     if (course.enrollment_status === 'pending') {
-      return t('actions.cancelRequest');
+      return "Batalkan Permintaan";
     }
 
     if (course.is_full) {
-      return t('actions.courseFull');
+      return "Kelas Penuh";
     }
 
     if (course.has_previous_enrollment) {
-      return t('actions.requestAgain');
+      return "Ajukan Lagi";
     }
 
-    return t('actions.enrollCourse');
+    return "Daftar Kelas";
   };
 
   const getCourseStatusLabel = (course: StudentCourse): string => {
     if (course.enrollment_status === 'approved') {
-      return t('status.ongoing');
+      return "Berlangsung";
     }
 
     if (course.enrollment_status === 'pending') {
-      return t('status.pending');
+      return "Menunggu Persetujuan";
     }
 
-    return course.is_full ? t('status.full') : t('status.available');
+    return course.is_full ? "Penuh" : "Tersedia";
   };
 
   return (
@@ -167,10 +165,10 @@ export default function StudentCoursesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {showBrowseCourses ? t('browseTitle') : t('myCoursesTitle')}
+            {showBrowseCourses ? "Jelajahi Kelas" : "Kelas Saya"}
           </h1>
           <p className="text-gray-500">
-            {showBrowseCourses ? t('browseSubtitle') : t('myCoursesSubtitle')}
+            {showBrowseCourses ? "Temukan dan daftar ke kelas yang tersedia." : "Lanjutkan pembelajaran pada kelas yang Anda ikuti."}
           </p>
         </div>
         <Button
@@ -178,13 +176,13 @@ export default function StudentCoursesPage() {
           onClick={() => setShowBrowseCourses((currentValue) => !currentValue)}
         >
           <BookOpen className="mr-2 h-4 w-4" />
-          {showBrowseCourses ? t('myCoursesTitle') : t('browseTitle')}
+          {showBrowseCourses ? "Kelas Saya" : "Jelajahi Kelas"}
         </Button>
       </div>
 
       {isLoading && (
         <div className="py-10 text-center text-gray-500">
-          {t('loading')}
+          {"Memuat kelas..."}
         </div>
       )}
 
@@ -206,7 +204,7 @@ export default function StudentCoursesPage() {
                 <div className="space-y-4">
                   <div>
                     <div className="mb-2 flex justify-between text-sm">
-                      <span className="text-gray-600">{t('progress')}</span>
+                      <span className="text-gray-600">{"Progres"}</span>
                       <span className="font-semibold text-[#0D542B]">
                         {course.progress}%
                       </span>
@@ -216,10 +214,7 @@ export default function StudentCoursesPage() {
 
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>
-                      {t('studentsCapacity', {
-                        approved: course.approved_students_count,
-                        capacity: course.capacity,
-                      })}
+                      {`${course.approved_students_count} / ${course.capacity} mahasiswa`}
                     </span>
                     <span className="font-medium text-emerald-600">
                       {getCourseStatusLabel(course)}
@@ -243,7 +238,7 @@ export default function StudentCoursesPage() {
 
           {displayedCourses.length === 0 && (
             <div className="col-span-full py-10 text-center text-gray-500">
-              {showBrowseCourses ? t('emptyBrowse') : t('emptyMyCourses')}
+              {showBrowseCourses ? "Belum ada kelas yang tersedia." : "Anda belum mengikuti kelas."}
             </div>
           )}
         </div>

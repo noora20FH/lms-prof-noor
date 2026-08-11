@@ -2,8 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter } from "next/navigation";
 import { api, csrf, getErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -80,7 +79,6 @@ function getAssignmentStatusClass(status: string) {
 }
 
 function CourseWeekDetailContent() {
-  const t = useTranslations("ProfessorCourseWeekDetail");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -125,7 +123,7 @@ function CourseWeekDetailContent() {
       setCourse(null);
       setAssignments([]);
       setSubmissions([]);
-      setError(getErrorMessage(error, t("loadError")));
+      setError(getErrorMessage(error, "Gagal memuat detail minggu."));
     } finally {
       setIsLoading(false);
     }
@@ -157,7 +155,7 @@ function CourseWeekDetailContent() {
         )
       );
     } catch (error) {
-      window.alert(getErrorMessage(error, t("saveGradeError")));
+      window.alert(getErrorMessage(error, "Gagal menyimpan nilai."));
     }
   };
 
@@ -179,7 +177,7 @@ function CourseWeekDetailContent() {
 
       setAssignments((prev) => [...prev, response.data.assignment]);
     } catch (error) {
-      window.alert(getErrorMessage(error, t("createAssignmentError")));
+      window.alert(getErrorMessage(error, "Gagal membuat tugas."));
     }
   };
 
@@ -209,12 +207,12 @@ function CourseWeekDetailContent() {
         )
       );
     } catch (error) {
-      window.alert(getErrorMessage(error, t("updateAssignmentError")));
+      window.alert(getErrorMessage(error, "Gagal memperbarui tugas."));
     }
   };
 
   const handleDeleteAssignment = async (id: string) => {
-    if (!confirm(t("confirmDeleteAssignment"))) return;
+    if (!confirm("Hapus tugas ini?")) return;
 
     try {
       await csrf();
@@ -222,7 +220,7 @@ function CourseWeekDetailContent() {
       setAssignments((prev) => prev.filter((assignment) => assignment.id !== id));
       setSubmissions((prev) => prev.filter((submission) => submission.assignmentId !== id));
     } catch (error) {
-      window.alert(getErrorMessage(error, t("deleteAssignmentError")));
+      window.alert(getErrorMessage(error, "Gagal menghapus tugas."));
     }
   };
 
@@ -232,22 +230,22 @@ function CourseWeekDetailContent() {
   };
 
   const getAssignmentStatusLabel = (status: AssignmentData['status']) => {
-    return t(`status.${status}`);
+    return ({ pending: "Menunggu", submitted: "Dikumpulkan", graded: "Dinilai" }[status] ?? status);
   };
 
   const getDaysLeftText = (daysLeft: number) => {
     if (daysLeft < 0) {
-      return t('daysOverdue', { days: Math.abs(daysLeft) });
+      return `${Math.abs(daysLeft)} hari terlambat`;
     }
 
-    return t('daysLeft', { days: daysLeft });
+    return `${daysLeft} hari lagi`;
   };
 
   if (isLoading) {
     return (
       <Card>
         <CardContent className="p-8 text-center text-gray-500">
-          {t("loading")}
+          {"Memuat..."}
         </CardContent>
       </Card>
     );
@@ -256,17 +254,17 @@ function CourseWeekDetailContent() {
   if (!course) {
     return (
       <div className="space-y-6">
-        <Button variant="outline" onClick={() => router.push("/professor/courses")}>
+        <Button variant="outline" onClick={() => router.push("/id/professor/courses")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          {t("back")}
+          {"Kembali"}
         </Button>
         <Card>
           <CardContent className="p-8 text-center">
             <h2 className="text-xl font-semibold text-gray-900">
-              {t("courseNotFound")}
+              {"Kelas tidak ditemukan"}
             </h2>
             <p className="mt-2 text-gray-500">
-              {error || t("courseNotFoundDescription")}
+              {error || "Data kelas atau minggu tidak tersedia."}
             </p>
           </CardContent>
         </Card>
@@ -285,15 +283,15 @@ function CourseWeekDetailContent() {
       >
         <button
           type="button"
-          onClick={() => router.push(`/professor/courses/details?courseId=${course.id}`)}
+          onClick={() => router.push(`/id/professor/courses/details?courseId=${course.id}`)}
           className="mb-4 flex items-center text-sm text-white/70 transition-colors hover:text-white"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          {t("back")}
+          {"Kembali"}
         </button>
         <h1 className="text-3xl font-bold tracking-tight">{course.title}</h1>
         <p className="mt-2 text-white/70">
-          {t("weekTitle", { week: weekNumber })}
+          {`Minggu ${weekNumber}`}
         </p>
       </div>
 
@@ -307,7 +305,7 @@ function CourseWeekDetailContent() {
               : "text-gray-500 hover:text-gray-800"
           }`}
         >
-          {t("assignments")}
+          {"Tugas"}
         </button>
         <button
           type="button"
@@ -318,7 +316,7 @@ function CourseWeekDetailContent() {
               : "text-gray-500 hover:text-gray-800"
           }`}
         >
-          {t("submittedTasks")}
+          {"Tugas Terkumpul"}
         </button>
       </div>
 
@@ -326,13 +324,13 @@ function CourseWeekDetailContent() {
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              {t("assignments")}
+              {"Tugas"}
             </h2>
             <Button
               onClick={() => setShowCreateAssignmentModal(true)}
               className="bg-gradient-to-r from-[#0D542B] to-[#004F3B] text-white hover:opacity-90"
             >
-              + {t("createAssignment")}
+              + {"Buat Tugas"}
             </Button>
           </div>
 
@@ -341,7 +339,7 @@ function CourseWeekDetailContent() {
               <CardContent className="p-8 text-center">
                 <ClipboardList className="mx-auto mb-3 h-10 w-10 text-gray-400" />
                 <p className="text-gray-500">
-                  {t("emptyAssignments", { week: weekNumber })}
+                  {`Belum ada tugas untuk Minggu ${weekNumber}.`}
                 </p>
               </CardContent>
             </Card>
@@ -368,14 +366,14 @@ function CourseWeekDetailContent() {
 
                       <div className="mt-5 grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                         <div className="rounded-xl bg-gray-50 p-4">
-                          <p className="text-gray-500">{t("dueDate")}</p>
+                          <p className="text-gray-500">{"Batas Waktu"}</p>
                           <div className="mt-1 flex items-center gap-2 text-gray-900">
                             <CalendarDays className="h-4 w-4" />
                             <span>{assignment.dueDate}</span>
                           </div>
                         </div>
                         <div className="rounded-xl bg-gray-50 p-4">
-                          <p className="text-gray-500">{t("daysLeftLabel")}</p>
+                          <p className="text-gray-500">{"Sisa Waktu"}</p>
                           <p className={`mt-1 font-medium ${assignment.daysLeft < 0 ? "text-red-600" : "text-gray-900"}`}>
                             {getDaysLeftText(assignment.daysLeft)}
                           </p>
@@ -385,7 +383,7 @@ function CourseWeekDetailContent() {
                       {assignment.gdriveSubmissionLink && (
                         <div className="mt-6 rounded-2xl border border-amber-100 bg-amber-50 p-5">
                           <div className="mb-2 flex items-center gap-2 text-sm font-medium text-amber-700">
-                            📤 {t("submissionLink")}
+                            📤 {"Tautan Pengumpulan"}
                           </div>
                           <a
                             href={assignment.gdriveSubmissionLink}
@@ -411,7 +409,7 @@ function CourseWeekDetailContent() {
                           className="flex items-center gap-1"
                         >
                           <Edit className="h-4 w-4" />
-                          {t("edit")}
+                          {"Edit"}
                         </Button>
                         <Button
                           variant="outline"
@@ -420,7 +418,7 @@ function CourseWeekDetailContent() {
                           className="flex items-center gap-1 text-red-600 hover:text-red-700"
                         >
                           <Trash2 className="h-4 w-4" />
-                          {t("delete")}
+                          {"Hapus"}
                         </Button>
                       </div>
 
@@ -428,7 +426,7 @@ function CourseWeekDetailContent() {
                         <div className="flex items-center gap-2 text-gray-500">
                           <ClipboardList className="h-4 w-4" />
                           <span>
-                            {t("submittedStudentCount", { count: submissionsCount })}
+                            {`${submissionsCount} mahasiswa mengumpulkan`}
                           </span>
                         </div>
                         <Button
@@ -437,7 +435,7 @@ function CourseWeekDetailContent() {
                           onClick={() => setActiveTab("submissions")}
                           className="text-[#0D542B]"
                         >
-                          {t("viewAll")}
+                          {"Lihat Semua"}
                         </Button>
                       </div>
                     </CardContent>
@@ -453,10 +451,10 @@ function CourseWeekDetailContent() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
-              {t("submittedTasks")}
+              {"Tugas Terkumpul"}
             </h2>
             <div className="text-sm text-gray-500">
-              {t("totalSubmissions", { count: weekSubmissions.length })}
+              {`Total ${weekSubmissions.length} pengumpulan`}
             </div>
           </div>
 
@@ -464,7 +462,7 @@ function CourseWeekDetailContent() {
             <Card>
               <CardContent className="p-8 text-center">
                 <ClipboardList className="mx-auto mb-3 h-10 w-10 text-gray-400" />
-                <p className="text-gray-500">{t("emptySubmissions")}</p>
+                <p className="text-gray-500">{"Belum ada mahasiswa yang mengumpulkan tugas."}</p>
               </CardContent>
             </Card>
           ) : (
@@ -493,7 +491,7 @@ function CourseWeekDetailContent() {
                                 <p className="mt-0.5 text-xs font-medium text-[#0D542B]">{sub.class_}</p>
                                 <p className="mt-1 text-sm text-gray-600">{sub.fileName}</p>
                                 <p className="mt-1 text-xs text-gray-400">
-                                  {t("submittedAt", { date: sub.submittedAt })}
+                                  {`Dikumpulkan: ${sub.submittedAt}`}
                                 </p>
                               </div>
                             </div>
@@ -502,7 +500,7 @@ function CourseWeekDetailContent() {
                               {sub.score !== undefined && sub.score !== null && (
                                 <div className="min-w-[60px] text-center">
                                   <span className="block text-xs text-gray-500">
-                                    {t("score")}
+                                    {"Nilai"}
                                   </span>
                                   <span className="text-3xl font-bold text-emerald-600">{sub.score}</span>
                                 </div>
@@ -511,7 +509,7 @@ function CourseWeekDetailContent() {
                               <Button variant="outline" size="sm" asChild>
                                 <a href={sub.fileUrl} target="_blank" rel="noopener noreferrer">
                                   <Eye className="mr-1 h-4 w-4" />
-                                  {t("openFile")}
+                                  {"Buka File"}
                                 </a>
                               </Button>
 
@@ -521,8 +519,8 @@ function CourseWeekDetailContent() {
                                 onClick={() => setGradingSubmission(sub)}
                               >
                                 {sub.score !== undefined && sub.score !== null
-                                  ? t("editScore")
-                                  : t("giveScore")}
+                                  ? "Edit Nilai"
+                                  : "Beri Nilai"}
                               </Button>
                             </div>
                           </div>
@@ -568,10 +566,8 @@ function CourseWeekDetailContent() {
 }
 
 export default function CourseWeekDetailPage() {
-  const t = useTranslations('ProfessorCourseWeekDetail');
-
   return (
-    <Suspense fallback={<div>{t('loading')}</div>}>
+    <Suspense fallback={<div>{"Memuat..."}</div>}>
       <CourseWeekDetailContent />
     </Suspense>
   );

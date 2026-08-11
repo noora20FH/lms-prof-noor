@@ -2,12 +2,10 @@
 
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
-import { Link, useRouter } from "@/i18n/navigation";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,9 +34,9 @@ type LoginResponse = {
 };
 
 function dashboardPathByRole(role?: string) {
-  if (role === "professor") return "/professor/dashboard";
-  if (role === "student") return "/student/dashboard";
-  if (role === "admin") return "/admin/dashboard";
+  if (role === "professor") return "/id/professor/dashboard";
+  if (role === "student") return "/id/student/dashboard";
+  if (role === "admin") return "/id/admin/dashboard";
 
   return null;
 }
@@ -46,25 +44,21 @@ function dashboardPathByRole(role?: string) {
 function normalizeRedirectTarget(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
 
-  const withoutLocale = value.replace(/^\/(id|en|zh)(?=\/|$)/, "") || "/";
+  const target = value === "/id" || value.startsWith("/id/")
+    ? value
+    : `/id${value}`;
 
-  if (withoutLocale.startsWith("/login") || withoutLocale.startsWith("/register")) {
+  if (target.startsWith("/id/login") || target.startsWith("/id/register")) {
     return null;
   }
 
-  return withoutLocale;
+  return target;
 }
 
 export default function LoginContent() {
   const searchParams = useSearchParams();
 
-  const redirectTo =
-    searchParams.get("redirect") ??
-    searchParams.get("callbackUrl");
   const router = useRouter();
-  const t = useTranslations("Auth.login");
-  const common = useTranslations("Common");
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -89,7 +83,7 @@ export default function LoginContent() {
         const dashboardPath = dashboardPathByRole(role);
   
         if (!dashboardPath) {
-          setError(t("unknownRole", { role: data.user?.role ?? common("empty") }));
+          setError(`Peran pengguna tidak dikenali: ${data.user?.role ?? "-"}`);
           return;
         }
   
@@ -99,17 +93,13 @@ export default function LoginContent() {
         router.refresh();
       } catch (err) {
         console.error("Login error:", err);
-        setError(getErrorMessage(err, t("errorFallback")));
+        setError(getErrorMessage(err, "Login gagal. Silakan periksa email dan kata sandi Anda."));
       } finally {
         setLoading(false);
       }
     };
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F172B] via-[#0D542B] to-[#004F3B] p-4">
-      <div className="fixed right-4 top-4 z-10">
-        <LanguageSwitcher compact />
-      </div>
-
       <Card className="w-full max-w-md bg-white/95 backdrop-blur-xl shadow-2xl border-0">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-[#0D542B] to-[#004F3B] rounded-2xl flex items-center justify-center text-3xl mb-4">
@@ -117,11 +107,11 @@ export default function LoginContent() {
           </div>
 
           <CardTitle className="text-3xl font-bold text-gray-900">
-            {t("title")}
+            {"Masuk"}
           </CardTitle>
 
           <CardDescription className="text-gray-600">
-            {t("description")}
+            {"Masuk ke akun LMS Anda"}
           </CardDescription>
         </CardHeader>
 
@@ -134,11 +124,11 @@ export default function LoginContent() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">{common("email")}</Label>
+              <Label htmlFor="email">{"Email"}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder={t("emailPlaceholder")}
+                placeholder={"nama@email.com"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -147,7 +137,7 @@ export default function LoginContent() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">{common("password")}</Label>
+              <Label htmlFor="password">{"Kata sandi"}</Label>
               <Input
                 id="password"
                 type="password"
@@ -167,16 +157,16 @@ export default function LoginContent() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  {t("loading")}
+                  {"Memproses..."}
                 </>
               ) : (
-                t("submit")
+                "Masuk"
               )}
             </Button>
           </form>
 
           <div className="mt-6 p-4 bg-gray-50 rounded-xl text-xs border border-gray-200">
-            <p className="font-medium text-gray-700 mb-2">{t("demoTitle")}</p>
+            <p className="font-medium text-gray-700 mb-2">{"Akun Demo"}</p>
             <p>
               <strong>Professor:</strong> professor@demo.com
             </p>
@@ -184,17 +174,17 @@ export default function LoginContent() {
               <strong>Student:</strong> student@demo.com
             </p>
             <p className="text-gray-500 mt-1">
-              {t("demoPassword")} <span className="font-mono">password</span>
+              {"Kata sandi:"} <span className="font-mono">password</span>
             </p>
           </div>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">{t("noAccount")} </span>
+            <span className="text-gray-600">{"Belum punya akun?"} </span>
             <Link
-              href="/register"
+              href="/id/register"
               className="font-medium text-[#0D542B] hover:underline"
             >
-              {t("registerLink")}
+              {"Daftar"}
             </Link>
           </div>
 

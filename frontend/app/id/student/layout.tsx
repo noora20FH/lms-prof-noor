@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Menu } from "lucide-react";
 
 import Sidebar from "@/components/Sidebar";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
@@ -48,11 +47,7 @@ export default function StudentLayout({
               LMS
             </span>
           </div>
-
-          <LanguageSwitcher
-            compact
-            className="border-gray-200 bg-[#0F172B] text-white"
-          />
+          <div className="h-10 w-10" aria-hidden="true" />
         </div>
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 lg:p-10">

@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { api, getErrorMessage } from "@/lib/api";
 
@@ -31,7 +30,6 @@ interface DashboardResponse {
 }
 
 export default function StudentDashboard() {
-  const t = useTranslations("StudentDashboard");
   const router = useRouter();
   const { user, loading: authLoading } = useAuthUser();
 
@@ -90,19 +88,19 @@ export default function StudentDashboard() {
   }, [authLoading, user]);
 
   const handleCourseClick = (courseId: number) => {
-    router.push(`/student/courses/details?courseId=${courseId}`);
+    router.push(`/id/student/courses/details?courseId=${courseId}`);
   };
 
   const handleAssignmentClick = (courseId: number, week: number) => {
-    router.push(`/student/courses/details/week?courseId=${courseId}&week=${week}`);
+    router.push(`/id/student/courses/details/week?courseId=${courseId}&week=${week}`);
   };
 
-  const displayName = authLoading ? "..." : user?.name ?? t("defaultName");
+  const displayName = authLoading ? "..." : user?.name ?? "Mahasiswa";
 
   if (authLoading || dataLoading) {
     return (
       <div className="flex h-full items-center justify-center p-8 text-center text-gray-600">
-        {t("loading")}
+        {"Memuat data..."}
       </div>
     );
   }
@@ -116,10 +114,10 @@ export default function StudentDashboard() {
         }}
       >
         <h1 className="mb-2 text-3xl font-bold">
-          {t("welcome", { name: displayName })}
+          {`Selamat datang, ${displayName}`}
         </h1>
         <p className="text-gray-300">
-          {t("subtitle", { count: pending.length })}
+          {`Anda memiliki ${pending.length} tugas yang perlu diperhatikan.`}
         </p>
       </div>
 
@@ -135,11 +133,11 @@ export default function StudentDashboard() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <h2 className="mb-4 text-xl font-semibold">
-            {t("enrolledClasses")}
+            {"Kelas yang Diikuti"}
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {!error && courses.length === 0 ? (
-              <p className="text-gray-500">{t("noCourses")}</p>
+              <p className="text-gray-500">{"Belum ada kelas yang diikuti."}</p>
             ) : (
               courses.map((course) => (
                 <Card
@@ -149,14 +147,14 @@ export default function StudentDashboard() {
                 >
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-gray-500">
-                      {t("courseLabel")}
+                      {"Mata Kuliah"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="mb-4 font-semibold">{course.title}</p>
                     <div className="mt-4">
                       <div className="mb-2 flex justify-between text-sm">
-                        <span>{t("progress")}</span>
+                        <span>{"Progres"}</span>
                         <span>{course.progress}%</span>
                       </div>
                       <Progress value={course.progress} className="h-2" />
@@ -170,12 +168,12 @@ export default function StudentDashboard() {
 
         <div>
           <h2 className="mb-4 text-xl font-semibold">
-            {t("pendingAssignments", { count: pending.length })}
+            {`Tugas Mendatang (${pending.length})`}
           </h2>
           <div className="space-y-4">
             {!error && pending.length === 0 ? (
               <p className="rounded-lg border p-4 text-center text-sm text-gray-500">
-                {t("noPendingAssignments")}
+                {"Tidak ada tugas yang menunggu."}
               </p>
             ) : (
               pending.map((assignment) => (
@@ -204,14 +202,12 @@ export default function StudentDashboard() {
                       }`}
                     >
                       {!assignment.hasDeadline
-                        ? t("noDeadline")
+                        ? "Tanpa batas waktu"
                         : assignment.isOverdue
-                          ? t("overdue", {
-                              days: Math.abs(assignment.daysLeft),
-                            })
+                          ? `${Math.abs(assignment.daysLeft)} hari terlambat`
                           : assignment.daysLeft === 0
-                            ? t("dueToday")
-                            : t("daysLeft", { days: assignment.daysLeft })}
+                            ? "Jatuh tempo hari ini"
+                            : `${assignment.daysLeft} hari lagi`}
                     </p>
                   </CardContent>
                 </Card>

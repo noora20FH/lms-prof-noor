@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { api, getErrorMessage } from "@/lib/api";
 import { toast } from "sonner";
@@ -37,20 +36,14 @@ const initialStats: DashboardStats = {
   pending_assignments: 0,
 };
 
-function getIntlLocale(locale: string) {
-  if (locale === "zh") return "zh-CN";
-  if (locale === "en") return "en-US";
-  return "id-ID";
-}
-
-function formatSubmittedAt(value: string | null, locale: string): string {
+function formatSubmittedAt(value: string | null): string {
   if (!value) return "-";
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) return "-";
 
-  return new Intl.DateTimeFormat(getIntlLocale(locale), {
+  return new Intl.DateTimeFormat("id-ID", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -60,14 +53,12 @@ function formatSubmittedAt(value: string | null, locale: string): string {
 }
 
 export default function ProfessorDashboard() {
-  const t = useTranslations("ProfessorDashboard");
-  const locale = useLocale();
   const router = useRouter();
   const { user, loading } = useAuthUser();
   const [stats, setStats] = useState<DashboardStats>(initialStats);
   const [recentSubmissions, setRecentSubmissions] = useState<RecentSubmission[]>([]);
 
-  const displayName = loading ? "..." : user?.name ?? t("defaultName");
+  const displayName = loading ? "..." : user?.name ?? "Dosen";
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -79,16 +70,16 @@ export default function ProfessorDashboard() {
         setStats(data.stats ?? initialStats);
         setRecentSubmissions(data.recent_submissions ?? []);
       } catch (error) {
-        toast.error(getErrorMessage(error, t("loadError")));
+        toast.error(getErrorMessage(error, "Gagal memuat dashboard dosen."));
       }
     };
 
     void loadDashboard();
-  }, [t]);
+  }, []);
 
   const handleViewSubmission = (submission: RecentSubmission) => {
     router.push(
-      `/professor/courses/details?courseId=${submission.course_id}&week=${submission.week}`
+      `/id/professor/courses/details?courseId=${submission.course_id}&week=${submission.week}`
     );
   };
 
@@ -102,28 +93,28 @@ export default function ProfessorDashboard() {
         }}
       >
         <h1 className="text-4xl font-bold tracking-tight">
-          {t("title")}
+          {"Dashboard Dosen"}
         </h1>
         <p className="mt-2 text-lg text-white/70">
-          {t("welcome", { name: displayName })} 👋
+          {`Selamat datang, ${displayName}`} 👋
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">{t("courses")}</p>
+          <p className="text-sm text-gray-500">{"Kelas"}</p>
           <p className="mt-2 text-5xl font-semibold text-[#0D542B]">
             {stats.courses}
           </p>
         </div>
         <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">{t("activeStudents")}</p>
+          <p className="text-sm text-gray-500">{"Mahasiswa Aktif"}</p>
           <p className="mt-2 text-5xl font-semibold text-[#0D542B]">
             {stats.active_students}
           </p>
         </div>
         <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">{t("pendingAssignments")}</p>
+          <p className="text-sm text-gray-500">{"Tugas Menunggu Penilaian"}</p>
           <p className="mt-2 text-5xl font-semibold text-[#0D542B]">
             {stats.pending_assignments}
           </p>
@@ -133,7 +124,7 @@ export default function ProfessorDashboard() {
       <div>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">
-            {t("recentSubmissions")}
+            {"Pengumpulan Terbaru"}
           </h3>
         </div>
 
@@ -143,19 +134,19 @@ export default function ProfessorDashboard() {
               <thead className="border-b border-gray-200 bg-gray-50">
                 <tr>
                   <th className="p-5 text-left font-medium text-gray-700">
-                    {t("student")}
+                    {"Mahasiswa"}
                   </th>
                   <th className="p-5 text-left font-medium text-gray-700">
-                    {t("assignment")}
+                    {"Tugas"}
                   </th>
                   <th className="p-5 text-left font-medium text-gray-700">
-                    {t("course")}
+                    {"Kelas"}
                   </th>
                   <th className="p-5 text-left font-medium text-gray-700">
-                    {t("submittedAt")}
+                    {"Dikumpulkan"}
                   </th>
                   <th className="w-40 p-5 text-center font-medium text-gray-700">
-                    {t("action")}
+                    {"Aksi"}
                   </th>
                 </tr>
               </thead>
@@ -163,7 +154,7 @@ export default function ProfessorDashboard() {
                 {recentSubmissions.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-gray-500">
-                      {t("emptyRecentSubmissions")}
+                      {"Belum ada pengumpulan tugas terbaru."}
                     </td>
                   </tr>
                 ) : (
@@ -190,14 +181,14 @@ export default function ProfessorDashboard() {
                       </td>
                       <td className="p-5 text-gray-600">{submission.course}</td>
                       <td className="p-5 text-sm text-gray-500">
-                        {formatSubmittedAt(submission.submitted_at, locale)}
+                        {formatSubmittedAt(submission.submitted_at)}
                       </td>
                       <td className="p-5 text-center">
                         <button
                           onClick={() => handleViewSubmission(submission)}
                           className="inline-flex items-center gap-2 font-medium text-[#0D542B] transition-colors hover:text-[#0A3F21] hover:underline"
                         >
-                          {t("view")}
+                          {"Lihat"}
                           <span className="text-xl leading-none">→</span>
                         </button>
                       </td>

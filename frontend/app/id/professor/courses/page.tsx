@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import Link from "next/link";
 import { api, csrf, getErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,7 +54,6 @@ const mapApiCourse = (course: ApiCourse): ProfessorCourse => ({
 });
 
 export default function ProfessorCourses() {
-  const t = useTranslations("ProfessorCourses");
   const [courses, setCourses] = useState<ProfessorCourse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -80,7 +78,7 @@ export default function ProfessorCourses() {
 
       setCourses(response.data.courses.map(mapApiCourse));
     } catch (error) {
-      setError(getErrorMessage(error, t("loadError")));
+      setError(getErrorMessage(error, "Gagal memuat daftar kelas."));
     } finally {
       setIsLoading(false);
     }
@@ -107,7 +105,7 @@ export default function ProfessorCourses() {
         ...previousCourses,
       ]);
     } catch (error) {
-      window.alert(getErrorMessage(error, t("addError")));
+      window.alert(getErrorMessage(error, "Gagal menambahkan kelas."));
     }
   };
 
@@ -142,7 +140,7 @@ export default function ProfessorCourses() {
         )
       );
     } catch (error) {
-      window.alert(getErrorMessage(error, t("updateError")));
+      window.alert(getErrorMessage(error, "Gagal memperbarui kelas."));
     }
   };
 
@@ -183,9 +181,9 @@ export default function ProfessorCourses() {
       >
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {t("title")}
+            {"Kelola Kelas"}
           </h1>
-          <p className="mt-1 text-white/80">{t("subtitle")}</p>
+          <p className="mt-1 text-white/80">{"Buat dan kelola kelas pembelajaran."}</p>
         </div>
 
         <Button
@@ -194,7 +192,7 @@ export default function ProfessorCourses() {
           className="bg-white text-[#0D542B] hover:bg-white/90"
         >
           <Plus className="mr-2 h-4 w-4" />
-          {t("addCourse")}
+          {"Tambah Kelas"}
         </Button>
       </div>
 
@@ -207,13 +205,13 @@ export default function ProfessorCourses() {
       {isLoading ? (
         <Card>
           <CardContent className="p-8 text-center text-gray-500">
-            {t("loading")}
+            {"Memuat kelas..."}
           </CardContent>
         </Card>
       ) : courses.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center text-gray-500">
-            {t("empty")}
+            {"Belum ada kelas."}
           </CardContent>
         </Card>
       ) : (
@@ -252,7 +250,7 @@ export default function ProfessorCourses() {
                         disabled={deletingCourseId === course.id}
                       >
                         <Pencil className="mr-1 h-4 w-4" />
-                        {t("edit")}
+                        {"Edit"}
                       </Button>
 
                       <Button
@@ -282,10 +280,7 @@ export default function ProfessorCourses() {
                     <div className="flex items-center gap-2 text-gray-600">
                       <Users className="h-4 w-4" />
                       <span>
-                        {t("studentsCount", {
-                          approved: approvedStudents,
-                          total: course.totalStudents,
-                        })}
+                        {`${approvedStudents} / ${course.totalStudents} mahasiswa`}
                       </span>
                     </div>
 
@@ -296,7 +291,7 @@ export default function ProfessorCourses() {
                           : "bg-gray-200 text-gray-600"
                       }`}
                     >
-                      {isCourseActive ? t("active") : t("disabled")}
+                      {isCourseActive ? "Aktif" : "Nonaktif"}
                     </span>
                   </div>
 
@@ -306,13 +301,13 @@ export default function ProfessorCourses() {
                         asChild
                         className="flex-1 bg-[#0D542B] hover:bg-[#0A3F21]"
                       >
-                        <Link href={`/professor/courses/details?courseId=${course.id}`}>
-                          {t("manageMaterials")}
+                        <Link href={`/id/professor/courses/details?courseId=${course.id}`}>
+                          {"Kelola Materi"}
                         </Link>
                       </Button>
                     ) : (
                       <Button type="button" disabled className="flex-1">
-                        {t("manageMaterials")}
+                        {"Kelola Materi"}
                       </Button>
                     )}
                   </div>

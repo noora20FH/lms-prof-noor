@@ -2,8 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
+import { useRouter } from "next/navigation";
 import { api, getErrorMessage } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,7 +43,6 @@ type CourseDetailResponse = {
 };
 
 function CourseDetailContent() {
-  const t = useTranslations('ProfessorCourseDetail');
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -73,20 +71,20 @@ function CourseDetailContent() {
         setApprovedStudentsCount(response.data.stats.approved_students_count);
       } catch (error) {
         setCourse(null);
-        setError(getErrorMessage(error, t('loadError')));
+        setError(getErrorMessage(error, "Gagal memuat detail kelas."));
       } finally {
         setIsLoading(false);
       }
     };
 
     void loadCourseDetail();
-  }, [courseId, t]);
+  }, [courseId]);
 
   if (isLoading) {
     return (
       <Card>
         <CardContent className="p-8 text-center text-gray-500">
-          {t('loading')}
+          {"Memuat..."}
         </CardContent>
       </Card>
     );
@@ -97,19 +95,19 @@ function CourseDetailContent() {
       <div className="space-y-6">
         <Button
           variant="outline"
-          onClick={() => router.push('/professor/courses')}
+          onClick={() => router.push('/id/professor/courses')}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          {t('back')}
+          {"Kembali"}
         </Button>
 
         <Card>
           <CardContent className="p-8 text-center">
             <h2 className="text-xl font-semibold text-gray-900">
-              {t('courseNotFound')}
+              {"Kelas tidak ditemukan"}
             </h2>
             <p className="mt-2 text-gray-500">
-              {error || t('courseNotFoundDescription')}
+              {error || "Data kelas tidak tersedia atau tidak dapat diakses."}
             </p>
           </CardContent>
         </Card>
@@ -119,7 +117,7 @@ function CourseDetailContent() {
 
   const handleWeekSelect = (week: number) => {
     router.push(
-      `/professor/courses/details/week?courseId=${course.id}&week=${week}`
+      `/id/professor/courses/details/week?courseId=${course.id}&week=${week}`
     );
   };
 
@@ -133,11 +131,11 @@ function CourseDetailContent() {
         }}
       >
         <button
-          onClick={() => router.push('/professor/courses')}
+          onClick={() => router.push('/id/professor/courses')}
           className="mb-4 flex items-center text-sm text-white/70 transition-colors hover:text-white"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          {t('back')}
+          {"Kembali"}
         </button>
 
         <h1 className="text-3xl font-bold tracking-tight">{course.title}</h1>
@@ -148,7 +146,7 @@ function CourseDetailContent() {
         <Card className="border border-gray-200 shadow-sm transition-shadow hover:shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              {t('registeredStudents')}
+              {"Mahasiswa Terdaftar"}
             </CardTitle>
             <Users className="h-5 w-5 text-emerald-700" />
           </CardHeader>
@@ -157,9 +155,7 @@ function CourseDetailContent() {
               {approvedStudentsCount}
             </div>
             <p className="mt-1 text-sm text-gray-500">
-              {t('studentsFromTotal', {
-                total: course.total_students ?? course.capacity,
-              })}
+              {`dari ${course.total_students ?? course.capacity} mahasiswa`}
             </p>
             <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
               <div
@@ -179,7 +175,7 @@ function CourseDetailContent() {
         <Card className="border border-gray-200 shadow-sm transition-shadow hover:shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              {t('totalWeeks')}
+              {"Total Minggu"}
             </CardTitle>
             <BookOpen className="h-5 w-5 text-emerald-700" />
           </CardHeader>
@@ -187,14 +183,14 @@ function CourseDetailContent() {
             <div className="text-4xl font-bold text-gray-900">
               {course.total_weeks}
             </div>
-            <p className="mt-1 text-sm text-gray-500">{t('weeksDescription')}</p>
+            <p className="mt-1 text-sm text-gray-500">{"Minggu pembelajaran yang tersedia"}</p>
           </CardContent>
         </Card>
 
         <Card className="border border-gray-200 shadow-sm transition-shadow hover:shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              {t('assignments')}
+              {"Tugas"}
             </CardTitle>
             <ClipboardList className="h-5 w-5 text-emerald-700" />
           </CardHeader>
@@ -202,14 +198,14 @@ function CourseDetailContent() {
             <div className="text-4xl font-bold text-gray-900">
               {assignmentsCount}
             </div>
-            <p className="mt-1 text-sm text-gray-500">{t('assignmentsDescription')}</p>
+            <p className="mt-1 text-sm text-gray-500">{"Total tugas dalam kelas"}</p>
           </CardContent>
         </Card>
       </div>
 
       <div>
         <h2 className="mb-4 text-lg font-semibold text-gray-900">
-          {t('courseWeeks')}
+          {"Minggu Pembelajaran"}
         </h2>
 
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -230,13 +226,10 @@ function CourseDetailContent() {
 
                   <div>
                     <p className="font-medium text-gray-900">
-                      {week.title || t('weekTitle', { week: week.week_number })}
+                      {week.title || `Minggu ${week.week_number}`}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {t('weekMeta', {
-                        materials: materialCount,
-                        assignments: assignmentCount,
-                      })}
+                      {`${materialCount} materi • ${assignmentCount} tugas`}
                     </p>
                   </div>
                 </div>
@@ -248,7 +241,7 @@ function CourseDetailContent() {
 
           {weeks.length === 0 && (
             <div className="p-8 text-center text-gray-500">
-              {t('emptyWeeks')}
+              {"Belum ada minggu pembelajaran."}
             </div>
           )}
         </div>
@@ -258,10 +251,8 @@ function CourseDetailContent() {
 }
 
 export default function CourseDetailPage() {
-  const t = useTranslations('ProfessorCourseDetail');
-
   return (
-    <Suspense fallback={<div>{t('loading')}</div>}>
+    <Suspense fallback={<div>{"Memuat..."}</div>}>
       <CourseDetailContent />
     </Suspense>
   );
