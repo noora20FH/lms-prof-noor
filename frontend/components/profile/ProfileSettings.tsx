@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useLocale } from "next-intl";
+import { useEffect, useState } from "react";
 import {
   GraduationCap,
   KeyRound,
@@ -86,89 +85,33 @@ type Copy = {
   securityNote: string;
 };
 
-const copyByLocale: Record<string, Copy> = {
-  id: {
-    title: "Profil Saya",
-    description: "Kelola informasi akun dan keamanan password Anda.",
-    accountTitle: "Informasi Profil",
-    accountDescription: "Perbarui data yang digunakan di dalam LMS.",
-    passwordTitle: "Ganti Password",
-    passwordDescription: "Gunakan minimal 8 karakter untuk password baru.",
-    name: "Nama lengkap",
-    email: "Email",
-    nim: "NIM",
-    className: "Kelas",
-    department: "Jurusan",
-    studyProgram: "Program studi",
-    currentPassword: "Password saat ini",
-    newPassword: "Password baru",
-    confirmPassword: "Konfirmasi password baru",
-    saveProfile: "Simpan profil",
-    savingProfile: "Menyimpan...",
-    changePassword: "Ganti password",
-    changingPassword: "Memperbarui...",
-    loadError: "Profil gagal dimuat.",
-    profileError: "Profil gagal diperbarui.",
-    passwordError: "Password gagal diperbarui.",
-    professor: "Professor",
-    student: "Mahasiswa",
-    securityNote:
-      "Password saat ini wajib dimasukkan untuk melindungi akun Anda.",
-  },
-  en: {
-    title: "My Profile",
-    description: "Manage your account information and password security.",
-    accountTitle: "Profile Information",
-    accountDescription: "Update the information used throughout the LMS.",
-    passwordTitle: "Change Password",
-    passwordDescription: "Use at least 8 characters for the new password.",
-    name: "Full name",
-    email: "Email",
-    nim: "Student ID",
-    className: "Class",
-    department: "Department",
-    studyProgram: "Study programme",
-    currentPassword: "Current password",
-    newPassword: "New password",
-    confirmPassword: "Confirm new password",
-    saveProfile: "Save profile",
-    savingProfile: "Saving...",
-    changePassword: "Change password",
-    changingPassword: "Updating...",
-    loadError: "Unable to load the profile.",
-    profileError: "Unable to update the profile.",
-    passwordError: "Unable to update the password.",
-    professor: "Professor",
-    student: "Student",
-    securityNote: "Your current password is required to protect your account.",
-  },
-  zh: {
-    title: "我的个人资料",
-    description: "管理您的账户信息和密码安全。",
-    accountTitle: "个人资料信息",
-    accountDescription: "更新学习管理系统中使用的信息。",
-    passwordTitle: "更改密码",
-    passwordDescription: "新密码至少使用 8 个字符。",
-    name: "姓名",
-    email: "电子邮件",
-    nim: "学号",
-    className: "班级",
-    department: "系别",
-    studyProgram: "专业",
-    currentPassword: "当前密码",
-    newPassword: "新密码",
-    confirmPassword: "确认新密码",
-    saveProfile: "保存资料",
-    savingProfile: "正在保存...",
-    changePassword: "更改密码",
-    changingPassword: "正在更新...",
-    loadError: "无法加载个人资料。",
-    profileError: "无法更新个人资料。",
-    passwordError: "无法更新密码。",
-    professor: "教授",
-    student: "学生",
-    securityNote: "为保护账户，必须输入当前密码。",
-  },
+const copy: Copy = {
+  title: "Profil Saya",
+  description: "Kelola informasi akun dan keamanan password Anda.",
+  accountTitle: "Informasi Profil",
+  accountDescription: "Perbarui data yang digunakan di dalam LMS.",
+  passwordTitle: "Ganti Password",
+  passwordDescription: "Gunakan minimal 8 karakter untuk password baru.",
+  name: "Nama lengkap",
+  email: "Email",
+  nim: "NIM",
+  className: "Kelas",
+  department: "Jurusan",
+  studyProgram: "Program studi",
+  currentPassword: "Password saat ini",
+  newPassword: "Password baru",
+  confirmPassword: "Konfirmasi password baru",
+  saveProfile: "Simpan profil",
+  savingProfile: "Menyimpan...",
+  changePassword: "Ganti password",
+  changingPassword: "Memperbarui...",
+  loadError: "Profil gagal dimuat.",
+  profileError: "Profil gagal diperbarui.",
+  passwordError: "Password gagal diperbarui.",
+  professor: "Dosen",
+  student: "Mahasiswa",
+  securityNote:
+    "Password saat ini wajib dimasukkan untuk melindungi akun Anda.",
 };
 
 const emptyProfileForm: ProfileForm = {
@@ -198,8 +141,6 @@ function profileToForm(profile: Profile): ProfileForm {
 }
 
 export default function ProfileSettings() {
-  const locale = useLocale();
-  const copy = useMemo(() => copyByLocale[locale] ?? copyByLocale.en, [locale]);
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileForm, setProfileForm] = useState<ProfileForm>(emptyProfileForm);

@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import {
   LogOut,
   LayoutDashboard,
@@ -11,30 +10,30 @@ import {
   X,
 } from "lucide-react";
 
-import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navItems = {
   professor: [
     {
-      labelKey: "dashboard",
-      href: "/professor/dashboard",
+      label: "Dashboard",
+      href: "/id/professor/dashboard",
       icon: LayoutDashboard,
     },
-    { labelKey: "courses", href: "/professor/courses", icon: BookOpen },
-    { labelKey: "materials", href: "/professor/materials", icon: FileText },
-    { labelKey: "students", href: "/professor/students", icon: Users },
+    { label: "Mata Kuliah", href: "/id/professor/courses", icon: BookOpen },
+    { label: "Materi", href: "/id/professor/materials", icon: FileText },
+    { label: "Mahasiswa", href: "/id/professor/students", icon: Users },
   ],
   student: [
     {
-      labelKey: "dashboard",
-      href: "/student/dashboard",
+      label: "Dashboard",
+      href: "/id/student/dashboard",
       icon: LayoutDashboard,
     },
-    { labelKey: "courses", href: "/student/courses", icon: BookOpen },
-    { labelKey: "assignments", href: "/student/assignments", icon: FileText },
+    { label: "Mata Kuliah", href: "/id/student/courses", icon: BookOpen },
+    { label: "Tugas", href: "/id/student/assignments", icon: FileText },
   ],
 } as const;
 
@@ -53,17 +52,16 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const t = useTranslations("Sidebar");
   const items = navItems[role];
   const profileHref =
-    role === "professor" ? "/professor/profile" : "/student/profile";
+    role === "professor" ? "/id/professor/profile" : "/id/student/profile";
 
   const isProfileActive =
     pathname === profileHref || pathname.startsWith(`${profileHref}/`);
 
   const handleLogout = () => {
     localStorage.clear();
-    router.replace("/login");
+    router.replace("/id/login");
   };
 
   return (
@@ -89,7 +87,7 @@ export default function Sidebar({
             size="icon"
             className="lg:hidden text-white hover:bg-white/10"
             onClick={onToggle}
-            aria-label={t("closeMenu")}
+            aria-label="Tutup menu"
           >
             <X className="w-6 h-6" />
           </Button>
@@ -122,7 +120,7 @@ export default function Sidebar({
                 }`}
               >
                 <Icon className="w-5 h-5" />
-                <span>{t(item.labelKey)}</span>
+                <span>{item.label}</span>
               </Link>
             );
           })}
@@ -147,17 +145,16 @@ export default function Sidebar({
 
             <div className="min-w-0 text-left">
               <p className="truncate text-sm font-semibold">{userName}</p>
-              <p className="text-xs text-white/60">{t("profile")}</p>
+              <p className="text-xs text-white/60">Profil</p>
             </div>
           </Link>
-          <LanguageSwitcher className="w-full justify-center" />
           <Button
             variant="ghost"
             className="w-full justify-start text-white/80 hover:text-white hover:bg-white/10 h-12 text-base"
             onClick={handleLogout}
           >
             <LogOut className="w-5 h-5 mr-3" />
-            {t("logout")}
+            Keluar
           </Button>
         </div>
       </div>
