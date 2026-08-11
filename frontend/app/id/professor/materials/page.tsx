@@ -101,11 +101,6 @@ type NewMaterialPayload = {
   unlockAt: string;
 };
 
-const DEFAULT_WEEK_TITLES: Record<number, string> = {
-  1: "Introduction to Fullstack",
-  2: "React Fundamentals",
-  3: "Laravel API & Authentication",
-};
 
 const getApiOrigin = (): string => {
   const baseUrl = api.defaults.baseURL;
@@ -172,7 +167,7 @@ export default function ProfessorMaterials() {
       return {
         weekNumber,
         title:
-          DEFAULT_WEEK_TITLES[weekNumber] ??
+        
           `Minggu ${weekNumber}`,
       };
     });
@@ -258,7 +253,6 @@ export default function ProfessorMaterials() {
           course_id: material.courseId,
           week_number: material.weekNumber,
           week_title:
-            DEFAULT_WEEK_TITLES[material.weekNumber] ??
             `Minggu ${material.weekNumber}`,
           title: material.title,
           type: material.type,
@@ -498,7 +492,7 @@ export default function ProfessorMaterials() {
               <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {`Minggu ${week.weekNumber}: ${week.title}`}
+                    {week.title}
                   </h2>
                   <p className="mt-1 text-sm text-gray-500">
                     {`${weekMaterials.length} materi tersedia`}
@@ -540,7 +534,7 @@ export default function ProfessorMaterials() {
                       setEditingWeek({
                         courseId: numericCourseId,
                         weekNumber: week.weekNumber,
-                        title: `Minggu ${week.weekNumber}: ${week.title}`,
+                        title: week.title,
                         unlockAt: weekSchedule?.unlock_at ?? null,
                         accessStatus,
                       });
@@ -562,7 +556,7 @@ export default function ProfessorMaterials() {
                       setSelectedWeek({
                         courseId: numericCourseId,
                         weekNumber: week.weekNumber,
-                        title: `Minggu ${week.weekNumber}: ${week.title}`,
+                        title: week.title,
                         unlockAt: weekSchedule?.unlock_at ?? null,
                       });
                     }}
