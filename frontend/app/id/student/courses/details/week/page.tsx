@@ -422,7 +422,7 @@ function StudentCourseWeekDetailContent() {
                   {assignment.gdrive_submission_link && (
                     <div className="mt-6 rounded-2xl border border-amber-100 bg-amber-50 p-5">
                       <p className="mb-2 text-sm font-medium text-amber-700">
-                        {"Folder Pengumpulan"}
+                        {"Link"}
                       </p>
                       <a
                         href={assignment.gdrive_submission_link}
