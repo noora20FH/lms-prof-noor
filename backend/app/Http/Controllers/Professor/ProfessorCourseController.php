@@ -129,7 +129,7 @@ class ProfessorCourseController extends Controller
                 'id' => $week->id,
                 'course_id' => $week->course_id,
                 'week_number' => $week->week_number,
-                'title' => $week->title ?: 'Week ' . $week->week_number,
+                'title' => $week->title ?: 'Minggu ' . $week->week_number,
                 'materials_count' => $week->materials_count,
                 'assignments_count' => $week->assignments_count,
             ]);
@@ -249,7 +249,7 @@ class ProfessorCourseController extends Controller
                     'week_number' => $weekNumber,
                 ],
                 [
-                    'title' => 'Week ' . $weekNumber,
+                    'title' => 'Minggu ' . $weekNumber,
                 ]
             );
         }

@@ -19,8 +19,9 @@ import EditAssignmentModal from "@/components/professor/EditAssignmentModal";
 import GradeSubmissionModal, {
   type GradeableSubmission,
 } from "@/components/professor/GradeSubmissionModal";
+import ProfessorWeekMaterials from "@/components/professor/ProfessorWeekMaterials";
 
-type ActiveTab = "assignments" | "submissions";
+type ActiveTab = "materials" | "assignments" | "submissions";
 
 type CourseData = {
   id: string;
@@ -82,12 +83,13 @@ function CourseWeekDetailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const rawCourseId = searchParams.get("courseId") ?? "1";
-  const weekNumber = Number(searchParams.get("week")) || 1;
+const rawCourseId = searchParams.get("courseId") ?? "1";
+const weekNumber = Number(searchParams.get("week")) || 1;
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>("assignments");
-  const [showCreateAssignmentModal, setShowCreateAssignmentModal] = useState(false);
-  const [showEditAssignmentModal, setShowEditAssignmentModal] = useState(false);
+const [activeTab, setActiveTab] = useState<ActiveTab>("materials");
+
+const [showCreateAssignmentModal, setShowCreateAssignmentModal] = useState(false);
+const [showEditAssignmentModal, setShowEditAssignmentModal] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<AssignmentData | null>(null);
 
   const [gradingSubmission, setGradingSubmission] = useState<GradeableSubmission | null>(null);
@@ -229,9 +231,7 @@ function CourseWeekDetailContent() {
     setShowEditAssignmentModal(true);
   };
 
-  const getAssignmentStatusLabel = (status: AssignmentData['status']) => {
-    return ({ pending: "Menunggu", submitted: "Dikumpulkan", graded: "Dinilai" }[status] ?? status);
-  };
+
 
   const getDaysLeftText = (daysLeft: number) => {
     if (daysLeft < 0) {
@@ -298,6 +298,17 @@ function CourseWeekDetailContent() {
       <div className="flex gap-2 border-b border-gray-200">
         <button
           type="button"
+          onClick={() => setActiveTab("materials")}
+          className={`px-4 py-3 text-sm font-medium transition-colors ${
+            activeTab === "materials"
+              ? "border-b-2 border-[#0D542B] text-gray-900"
+              : "text-gray-500 hover:text-gray-800"
+          }`}
+        >
+          {"Materi"}
+        </button>
+        <button
+          type="button"
           onClick={() => setActiveTab("assignments")}
           className={`px-4 py-3 text-sm font-medium transition-colors ${
             activeTab === "assignments"
@@ -320,12 +331,18 @@ function CourseWeekDetailContent() {
         </button>
       </div>
 
+      {activeTab === "materials" && (
+        <ProfessorWeekMaterials
+          courseId={rawCourseId}
+          weekNumber={weekNumber}
+          weekTitle={`Minggu ${weekNumber}`}
+        />
+      )}
+
       {activeTab === "assignments" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {"Tugas"}
-            </h2>
+          <div className="flex items-center justify-end ">
+
             <Button
               onClick={() => setShowCreateAssignmentModal(true)}
               className="bg-gradient-to-r from-[#0D542B] to-[#004F3B] text-white hover:opacity-90"
@@ -359,9 +376,7 @@ function CourseWeekDetailContent() {
                             {assignment.course}
                           </p>
                         </div>
-                        <span className={`rounded-2xl px-3 py-1 text-xs font-medium capitalize ${getAssignmentStatusClass(assignment.status)}`}>
-                          {getAssignmentStatusLabel(assignment.status)}
-                        </span>
+
                       </div>
 
                       <div className="mt-5 grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
@@ -383,7 +398,7 @@ function CourseWeekDetailContent() {
                       {assignment.gdriveSubmissionLink && (
                         <div className="mt-6 rounded-2xl border border-amber-100 bg-amber-50 p-5">
                           <div className="mb-2 flex items-center gap-2 text-sm font-medium text-amber-700">
-                            📤 {"Tautan Pengumpulan"}
+                            📤 {"Link"}
                           </div>
                           <a
                             href={assignment.gdriveSubmissionLink}

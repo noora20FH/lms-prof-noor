@@ -23,7 +23,6 @@ const navItems = {
       icon: LayoutDashboard,
     },
     { label: "Mata Kuliah", href: "/id/professor/courses", icon: BookOpen },
-    { label: "Materi", href: "/id/professor/materials", icon: FileText },
     { label: "Mahasiswa", href: "/id/professor/students", icon: Users },
   ],
   student: [

@@ -39,7 +39,7 @@ class ProfessorAssignmentController extends Controller
             'week' => [
                 'id' => $weekModel->id,
                 'week_number' => $weekModel->week_number,
-                'title' => $weekModel->title ?: 'Week ' . $weekModel->week_number,
+                'title' => $weekModel->title ?: 'Minggu ' . $weekModel->week_number,
             ],
             'assignments' => $assignments,
         ]);
@@ -152,7 +152,7 @@ class ProfessorAssignmentController extends Controller
                 'week_number' => $weekNumber,
             ],
             [
-                'title' => 'Week ' . $weekNumber,
+                'title' => 'Minggu ' . $weekNumber,
             ]
         );
     }

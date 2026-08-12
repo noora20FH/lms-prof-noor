@@ -58,6 +58,7 @@ class MaterialController extends Controller
 
         $validated = $request->validate([
             'course_id' => ['nullable', 'integer', 'exists:courses,id'],
+            'week_number' => ['nullable', 'integer', 'min:1', 'max:52'],
         ]);
 
         $course = null;
@@ -69,6 +70,9 @@ class MaterialController extends Controller
 
             $weeks = Week::query()
                 ->where('course_id', $course->id)
+                ->when(! empty($validated['week_number']), function ($query) use ($validated) {
+                    $query->where('week_number', (int) $validated['week_number']);
+                })
                 ->orderBy('week_number')
                 ->get()
                 ->map(fn (Week $week) => $this->weekResponse($week))
@@ -83,6 +87,11 @@ class MaterialController extends Controller
             ->when($course, function ($query) use ($course) {
                 $query->whereHas('week', function ($weekQuery) use ($course) {
                     $weekQuery->where('course_id', $course->id);
+                });
+            })
+            ->when(! empty($validated['week_number']), function ($query) use ($validated) {
+                $query->whereHas('week', function ($weekQuery) use ($validated) {
+                    $weekQuery->where('week_number', (int) $validated['week_number']);
                 });
             })
             ->get()
@@ -129,9 +138,9 @@ class MaterialController extends Controller
 
         return response()->json([
             'message' => match ($validated['access_status']) {
-                'active' => 'Week berhasil diaktifkan.',
-                'scheduled' => 'Jadwal akses week berhasil diperbarui.',
-                default => 'Week berhasil dikunci.',
+                'active' => 'Minggu berhasil diaktifkan.',
+                'scheduled' => 'Jadwal akses minggu berhasil diperbarui.',
+                default => 'Minggu berhasil dikunci.',
             },
             'week' => $this->weekResponse($courseWeek->fresh()),
         ]);
