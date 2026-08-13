@@ -36,16 +36,9 @@ Route::middleware('auth:sanctum')->group(function () {
             'role',
         ]);
     });
-    Route::get('/profile', function (Request $request) {
-        return $request->user()->only([
-            'id',
-            'name',
-            'email',
-            'nim',
-            'class_',
-            'role',
-        ]);
-    });
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::patch('/profile', [ProfileController::class, 'update']);
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');

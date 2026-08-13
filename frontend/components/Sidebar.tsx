@@ -97,7 +97,7 @@ export default function Sidebar({
           <div>
             <h1 className="text-3xl font-bold tracking-tight">LMS</h1>
             <p className="text-xs text-emerald-400 -mt-1">
-              Prof. M. Noor Hidayat
+              Prof. Ir. Mohammad Noor Hidayat, ST, MSc, Ph.D.
             </p>
           </div>
         </div>
