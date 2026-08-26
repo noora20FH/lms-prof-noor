@@ -121,39 +121,38 @@ export default function ProfessorDashboard() {
         </div>
       </div>
 
-      <div>
+<div className="w-full min-w-0">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">
             {"Pengumpulan Terbaru"}
           </h3>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px]">
+        <div className="w-full overflow-hidden rounded-2xl md:rounded-3xl border border-gray-200 bg-white shadow-sm">
+          <div className="w-full overflow-x-auto">
+            
+            <table className="w-full min-w-max">
               <thead className="border-b border-gray-200 bg-gray-50">
                 <tr>
-                  <th className="p-5 text-left font-medium text-gray-700">
+                  
+                  <th className="whitespace-nowrap px-3 py-4 md:p-5 text-left text-sm md:text-base font-medium text-gray-700">
                     {"Mahasiswa"}
                   </th>
-                  <th className="p-5 text-left font-medium text-gray-700">
+                  <th className="whitespace-nowrap px-3 py-4 md:p-5 text-left text-sm md:text-base font-medium text-gray-700">
                     {"Tugas"}
                   </th>
-                  <th className="p-5 text-left font-medium text-gray-700">
+                  <th className="whitespace-nowrap px-3 py-4 md:p-5 text-left text-sm md:text-base font-medium text-gray-700">
                     {"Kelas"}
                   </th>
-                  <th className="p-5 text-left font-medium text-gray-700">
+                  <th className="whitespace-nowrap px-3 py-4 md:p-5 text-left text-sm md:text-base font-medium text-gray-700">
                     {"Dikumpulkan"}
-                  </th>
-                  <th className="w-40 p-5 text-center font-medium text-gray-700">
-                    {"Aksi"}
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {recentSubmissions.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-gray-500">
+                    <td colSpan={4} className="p-6 md:p-8 text-center text-sm md:text-base text-gray-500">
                       {"Belum ada pengumpulan tugas terbaru."}
                     </td>
                   </tr>
@@ -161,36 +160,31 @@ export default function ProfessorDashboard() {
                   recentSubmissions.map((submission) => (
                     <tr
                       key={submission.id}
-                      className="transition-colors hover:bg-gray-50"
+                      onClick={() => handleViewSubmission(submission)}
+                      className="cursor-pointer transition-colors hover:bg-gray-50"
                     >
-                      <td className="p-5">
+                      {/* Padding responsif pada semua <td> */}
+                      <td className="whitespace-nowrap px-3 py-4 md:p-5">
                         <div>
-                          <p className="font-semibold text-gray-900">
+                          <p className="font-semibold text-gray-900 text-sm md:text-base">
                             {submission.student_name}
                           </p>
-                          <p className="mt-0.5 text-xs text-gray-500">
+                          <p className="mt-0.5 text-[11px] md:text-xs text-gray-500">
                             {submission.nim}
                           </p>
-                          <p className="mt-0.5 text-xs font-medium text-[#0D542B]">
+                          <p className="mt-0.5 text-[11px] md:text-xs font-medium text-[#0D542B]">
                             {submission.class_}
                           </p>
                         </div>
                       </td>
-                      <td className="p-5 font-medium text-gray-900">
+                      <td className="whitespace-nowrap px-3 py-4 md:p-5 font-medium text-gray-900 text-sm md:text-base">
                         {submission.assignment_title}
                       </td>
-                      <td className="p-5 text-gray-600">{submission.course}</td>
-                      <td className="p-5 text-sm text-gray-500">
-                        {formatSubmittedAt(submission.submitted_at)}
+                      <td className="whitespace-nowrap px-3 py-4 md:p-5 text-gray-600 text-sm md:text-base">
+                        {submission.course}
                       </td>
-                      <td className="p-5 text-center">
-                        <button
-                          onClick={() => handleViewSubmission(submission)}
-                          className="inline-flex items-center gap-2 font-medium text-[#0D542B] transition-colors hover:text-[#0A3F21] hover:underline"
-                        >
-                          {"Lihat"}
-                          <span className="text-xl leading-none">→</span>
-                        </button>
+                      <td className="whitespace-nowrap px-3 py-4 md:p-5 text-xs md:text-sm text-gray-500">
+                        {formatSubmittedAt(submission.submitted_at)}
                       </td>
                     </tr>
                   ))

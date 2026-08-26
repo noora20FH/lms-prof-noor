@@ -165,19 +165,6 @@ export default function LoginContent() {
             </Button>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-xl text-xs border border-gray-200">
-            <p className="font-medium text-gray-700 mb-2">{"Akun Demo"}</p>
-            <p>
-              <strong>Professor:</strong> professor@demo.com
-            </p>
-            <p>
-              <strong>Student:</strong> student@demo.com
-            </p>
-            <p className="text-gray-500 mt-1">
-              {"Kata sandi:"} <span className="font-mono">password</span>
-            </p>
-          </div>
-
           <div className="mt-6 text-center text-sm">
             <span className="text-gray-600">{"Belum punya akun?"} </span>
             <Link
