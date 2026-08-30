@@ -4,7 +4,7 @@ import { FormEvent, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 
-type MaterialType = 'pdf' | 'ppt' | 'video_link' | 'yt_link';
+type MaterialType = 'pdf' | 'ppt' | 'video_link' | 'yt_link'| 'presensi_link';
 
 type NewMaterialPayload = {
   courseId: number;
@@ -134,8 +134,9 @@ export default function AddProfessorMaterialModal({
             >
               <option value="pdf">PDF</option>
               <option value="ppt">PPT</option>
-              <option value="video_link">Video Link</option>
-              <option value="yt_link">YouTube Link</option>
+              <option value="video_link">Link Video</option>
+              <option value="yt_link">Link Youtube</option>
+              <option value="presensi_link">Link Presensi</option>
             </select>
           </div>
 

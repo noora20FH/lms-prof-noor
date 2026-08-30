@@ -18,7 +18,7 @@ import {
 import AddProfessorMaterialModal from '@/components/professor/AddProfessorMaterialModal';
 import EditWeekAccessModal from '@/components/professor/EditWeekAccessModal';
 
-type MaterialType = 'pdf' | 'ppt' | 'video_link' | 'yt_link';
+type MaterialType = 'pdf' | 'ppt' | 'video_link' | 'yt_link' | 'presensi_link';
 type WeekAccessStatus = 'active' | 'locked' | 'scheduled';
 
 type Material = {
@@ -298,6 +298,9 @@ export default function ProfessorWeekMaterials({
     if (type === 'yt_link') {
       return <Play className="h-5 w-5 text-red-500" />;
     }
+    if (type === 'presensi_link') {
+      return <FileText className="h-5 w-5 text-indigo-500" />;
+    }
 
     return <FileText className="h-5 w-5 text-gray-500" />;
   };
@@ -307,6 +310,7 @@ export default function ProfessorWeekMaterials({
     if (type === 'ppt') return 'PPT';
     if (type === 'video_link') return 'Video';
     if (type === 'yt_link') return 'YouTube';
+    if (type === 'presensi_link') return 'Link Presensi';
 
     return type;
   };

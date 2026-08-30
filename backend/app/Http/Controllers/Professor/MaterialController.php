@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 class MaterialController extends Controller
 {
-    private array $requestTypes = ['pdf', 'ppt', 'video', 'video_link', 'yt_link'];
+    private array $requestTypes = ['pdf', 'ppt', 'video', 'video_link', 'yt_link', 'presensi_link'];
 
     private array $fileTypes = ['pdf', 'ppt', 'video'];
 

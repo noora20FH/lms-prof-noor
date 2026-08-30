@@ -16,7 +16,7 @@ import {
   LockKeyhole,
 } from 'lucide-react';
 
-type MaterialType = 'pdf' | 'ppt' | 'video_link' | 'yt_link';
+type MaterialType = 'pdf' | 'ppt' | 'video_link' | 'yt_link'| 'presensi_link';
 
 type CourseData = {
   id: number;
@@ -104,7 +104,10 @@ function formatDateTime(value: string | null): string {
 function getMaterialIcon(type: MaterialType): string {
   if (type === 'pdf') return '📄';
   if (type === 'ppt') return '📊';
-  return '🎥';
+  if (type === 'video_link') return '🎬'
+  if (type === 'yt_link') return '🎬';
+  if (type === 'presensi_link') return '👥';
+  return '📄';
 }
 
 function getAssignmentAvailability(assignment: AssignmentData): AssignmentAvailability {
@@ -259,7 +262,7 @@ function StudentCourseWeekDetailContent() {
   };
 
   const getMaterialLabel = (type: MaterialType): string => {
-    return ({ pdf: "PDF", ppt: "PPT", video_link: "Video", yt_link: "YouTube" }[type] ?? type);
+    return ({ pdf: "PDF", ppt: "PPT", video_link: "Video", yt_link: "YouTube", presensi_link: "Link Presensi" }[type] ?? type);
   };
 
   if (isLoading) {
