@@ -17,7 +17,7 @@ use App\Http\Controllers\Api\Student\StudentSubmissionController;
 use App\Http\Controllers\Api\Student\StudentDashboardController;
 use App\Http\Controllers\Api\Student\AssignmentController;
 use App\Http\Controllers\Api\ProfileController;
-
+use Illuminate\Support\Facades\Mail;
 // ==================== AUTH PUBLIC ====================
 Route::post('/register', [RegisterController::class, 'register']);
 
@@ -115,4 +115,26 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/{enrollmentId}/restore', [StudentController::class, 'restore']);
         Route::delete('/{enrollmentId}', [StudentController::class, 'destroy']);
     });
+
+});
+// ==================== SMTP TEST ====================
+
+Route::get('/smtp-test', function () {
+
+    Mail::raw(
+        'SMTP Brevo LMS berhasil berjalan.',
+        function ($message) {
+
+            $message
+                ->to('noora20fairy@gmail.com')
+                ->subject('Testing SMTP LMS');
+
+        }
+    );
+
+
+    return response()->json([
+        'message' => 'Email berhasil dikirim'
+    ]);
+
 });
