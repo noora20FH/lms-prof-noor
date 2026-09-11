@@ -18,6 +18,9 @@ use App\Http\Controllers\Api\Student\StudentDashboardController;
 use App\Http\Controllers\Api\Student\AssignmentController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+
+
 // ==================== AUTH PUBLIC ====================
 Route::post('/register', [RegisterController::class, 'register']);
 
@@ -138,3 +141,13 @@ Route::get('/smtp-test', function () {
     ]);
 
 });
+Route::post(
+    '/forgot-password',
+    [ForgotPasswordController::class,'sendResetLink']
+);
+
+
+Route::post(
+    '/reset-password',
+    [ForgotPasswordController::class,'reset']
+);
