@@ -63,6 +63,8 @@ export default function LoginContent() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMessage, setForgotMessage] = useState("");
 
   // Seluruh state, fungsi login, dan JSX login Anda
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -98,6 +100,49 @@ export default function LoginContent() {
         setLoading(false);
       }
     };
+
+  async function handleForgotPassword() {
+
+    if (!email) {
+        setForgotMessage(
+            "Silakan masukkan email terlebih dahulu."
+        );
+        return;
+    }
+
+
+    try {
+
+        setForgotLoading(true);
+        setForgotMessage("");
+
+
+        await api.post(
+            "api/forgot-password",
+            {
+                email: email
+            }
+        );
+
+
+        setForgotMessage(
+            "Link reset password telah dikirim ke email Anda."
+        );
+
+
+    } catch (error: any) {
+
+        setForgotMessage(
+            error.response?.data?.message ??
+            "Gagal mengirim link reset password."
+        );
+
+    } finally {
+
+        setForgotLoading(false);
+
+    }
+  }
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0F172B] via-[#0D542B] to-[#004F3B] p-4">
       <Card className="w-full max-w-md bg-white/95 backdrop-blur-xl shadow-2xl border-0">
@@ -136,18 +181,47 @@ export default function LoginContent() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">{"Kata sandi"}</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="h-12"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">
+              Kata sandi
+            </Label>
+
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e)=>setPassword(e.target.value)}
+              required
+              className="h-12"
+            />
+          </div>
+
+
+          <div className="text-right mt-2">
+
+          <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={forgotLoading}
+              className="text-sm text-primary hover:underline"
+          >
+              {forgotLoading
+                  ? "Mengirim..."
+                  : "Lupa Password?"
+              }
+          </button>
+
+          </div>
+
+
+          {forgotMessage && (
+          <Alert className="mt-3">
+              <AlertDescription>
+                  {forgotMessage}
+              </AlertDescription>
+          </Alert>
+          )}
 
             <Button
               type="submit"
@@ -182,4 +256,5 @@ export default function LoginContent() {
       </Card>
     </div>
   );
+  
 }
